@@ -95,42 +95,42 @@ static void MX_FSMC_Init(void);
 	}
 }
 	
-	void inputModel(void) {
+	void selectModel(void) {
 		/*
 		Select watch model with predefined winding details
 		*/
 	}
 	
-	void inputHour(void) {
+	void inputTurn(void) {
 		/*
-		Manually input winding hour
+		Manually input number of rotation turns
 		*/
 		char buffer[50];
-		sprintf(buffer, "%0.1f hour", targetHour);
+		sprintf(buffer, "%d", targetNumRotation);
 		
-		LCD_DrawString(50,50,"Select winding hour");
-		LCD_DrawRectButton(50,150,100,40,"- 1/2 hour");
-		LCD_DrawRectButton(50,200,100,40,"+ 1/2 hour");
+		LCD_DrawString(50,50,"Input rotation number");
+		LCD_DrawRectButton(50,150,150,40,"- 100 rotation");
+		LCD_DrawRectButton(50,200,150,40,"+ 100 rotation");
 		LCD_DrawString(170,300,"Next >>");
-		LCD_DrawString(100,100,buffer); 
+		LCD_DrawString(100,100,buffer); 	
 		
-		while (true) {
-			float x, y;
+		float x, y;
+		while (true) {	
 			if (isTouched()) {
 				getTouchCoord(&x, &y);
-				// decrement 1/2 hour
+				// decrement 100 rotation
 				if (x >= 50 && x <= 150 && y >= 150 && y <= 190) {
-					targetHour -= 0.5;
-					sprintf(buffer, "%0.1f	hour", targetHour);
-					LCD_Clear (50, 50, 150, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer); 
+					targetNumRotation -= 100;
+					sprintf(buffer, "%d", targetNumRotation);
+					LCD_Clear (10, 100, 240, 50, BACKGROUND);
+					LCD_DrawString(150,100,buffer); 
 				}
-				// increment 1/2 hour
+				// increment 100 rotation
 				else if (x >= 50 && x <= 150 && y >= 200 && y <= 240){
-					targetHour += 0.5;
-					sprintf(buffer, "%0.1f	hour", targetHour);
-					LCD_Clear (50, 50, 150, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer); 
+					targetNumRotation += 100;
+					sprintf(buffer, "%d", targetNumRotation);
+					LCD_Clear (10, 100, 240, 50, BACKGROUND);
+					LCD_DrawString(150,100,buffer); 
 				}
 				// finish input
 				else if (x >= 180 && x <= 250 && y >=180 && y<= 350){
@@ -140,6 +140,56 @@ static void MX_FSMC_Init(void);
 				else {
 					LCD_DrawString(20,100,"Please select valid input.");
 					HAL_Delay(1000);
+					LCD_Clear (10, 100, 240, 50, BACKGROUND);
+					LCD_DrawString(50,100,buffer);
+					// TODO: to be remove
+					x = 200;
+					y = 200;
+				}
+			}
+		}
+	}
+	
+	void inputHour(void) {
+		/*
+		Manually input winding hour
+		*/
+		char buffer[50];
+		sprintf(buffer, "%0.1f hour", targetHour);
+		
+		LCD_DrawString(50,50,"Input winding hour");
+		LCD_DrawRectButton(50,150,100,40,"- 1/2 hour");
+		LCD_DrawRectButton(50,200,100,40,"+ 1/2 hour");
+		LCD_DrawString(170,300,"Next >>");
+		LCD_DrawString(100,100,buffer); 
+		
+		float x, y;
+		while (true) {
+			if (isTouched()) {
+				getTouchCoord(&x, &y);
+				// decrement 1/2 hour
+				if (x >= 50 && x <= 150 && y >= 150 && y <= 190) {
+					targetHour -= 0.5;
+					sprintf(buffer, "%0.1f	hour", targetHour);
+					LCD_Clear (10, 100, 240, 50, BACKGROUND);
+					LCD_DrawString(150,100,buffer); 
+				}
+				// increment 1/2 hour
+				else if (x >= 50 && x <= 150 && y >= 200 && y <= 240){
+					targetHour += 0.5;
+					sprintf(buffer, "%0.1f	hour", targetHour);
+					LCD_Clear (10, 100, 240, 50, BACKGROUND);
+					LCD_DrawString(150,100,buffer); 
+				}
+				// finish input
+				else if (x >= 180 && x <= 250 && y >=180 && y<= 350){
+					return;
+				}	
+				// invaid input
+				else {
+					LCD_DrawString(20,100,"Please select valid input.");
+					HAL_Delay(1000);
+					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(50,100,buffer);
 				}
 			}
@@ -200,9 +250,11 @@ int main(void)
 			switch(inputType) {
 				case 0:			// predefined input
 					LCD_Clear (0, 0, 240, 320, BACKGROUND);
-					inputModel();
+					selectModel();
 					break;
 				case 1: 
+					LCD_Clear (0, 0, 240, 320, BACKGROUND);
+					inputTurn();
 					LCD_Clear (0, 0, 240, 320, BACKGROUND);
 					inputHour();
 					break;
