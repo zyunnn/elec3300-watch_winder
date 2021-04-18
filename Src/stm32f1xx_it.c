@@ -62,7 +62,7 @@
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M3 Processor Interruption and Exception Handlers          */ 
+/*           Cortex-M3 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -205,14 +205,7 @@ void EXTI0_IRQHandler(void)
   /* USER CODE BEGIN EXTI0_IRQn 0 */
 
   /* USER CODE END EXTI0_IRQn 0 */
-	if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_0) != RESET) {
-		
-		// TODO: Add proximity sensor output -> detach watch 
-		promptWatch();
-		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_0);
-		HAL_GPIO_EXTI_Callback(GPIO_PIN_0);
-	}
-  //HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_0);
   /* USER CODE BEGIN EXTI0_IRQn 1 */
 
   /* USER CODE END EXTI0_IRQn 1 */
