@@ -44,9 +44,13 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c2;
+
 SRAM_HandleTypeDef hsram1;
 
 /* USER CODE BEGIN PV */
+#define AT24C02_ADDR_WRITE  0xA0
+#define AT24C02_ADDR_READ   0xA1
 int targetNumRotation, curNumRotation;
 float targetHour = 0;
 float curHour;
@@ -57,18 +61,29 @@ float x_coord, y_coord;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_FSMC_Init(void);
+static void MX_I2C2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+	uint8_t saveByte(uint16_t addr, uint8_t* dat)
+	{
+			return HAL_I2C_Mem_Write(&hi2c2, AT24C02_ADDR_WRITE, addr, I2C_MEMADD_SIZE_8BIT, dat, 1, 0xFFFF);
+	}
+	
+	uint8_t readByte(uint16_t addr, uint8_t* read_buf)
+	{
+			return HAL_I2C_Mem_Read(&hi2c2, AT24C02_ADDR_READ, addr, I2C_MEMADD_SIZE_8BIT, read_buf, 1, 0xFFFF);
+	}
+
 	bool isTouched(void) {
 		bool touched = (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4)==GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
 		return touched;
 	}
-	
+
 	void getTouchCoord(float* x_coord, float* y_coord) {
 		// TODO: get touch coordinates using HAL library
 		return;
@@ -197,6 +212,7 @@ static void MX_FSMC_Init(void);
 	}
 	
 	void rotateFullCycle(int mode) {
+		uint8_t y = 0;
 		int t = 2;
 		switch (mode) {
 			case 0:
@@ -224,6 +240,32 @@ static void MX_FSMC_Init(void);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
 					HAL_Delay(t);
+					
+					//uint8_t x = (uint8_t)i;
+					uint8_t x = 0xa5;
+					char XM[10];
+					sprintf(XM,"%x",x);
+					
+					int8_t HAL_res = saveByte(10,&x);
+					HAL_Delay(5);
+					LCD_DrawString(20, 10, XM);
+					if(HAL_OK == HAL_res)
+					{
+							char Buf[10];
+							sprintf(Buf,"Write ok");
+							LCD_DrawString(30, 10, Buf);
+					}
+					else
+					{
+						char Buf[10];
+						sprintf(Buf,"Write gg");
+						LCD_DrawString(30, 10, Buf);	
+					}
+
+					readByte(10,&y);
+					char YM[10];
+					sprintf(YM,"%x",y);
+					LCD_DrawString(20, 20, YM);
 				}
 				break;
 			case 1:
@@ -300,8 +342,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_FSMC_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
 	LCD_INIT();
+	startWinding();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -370,6 +414,40 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief I2C2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C2_Init(void)
+{
+
+  /* USER CODE BEGIN I2C2_Init 0 */
+
+  /* USER CODE END I2C2_Init 0 */
+
+  /* USER CODE BEGIN I2C2_Init 1 */
+
+  /* USER CODE END I2C2_Init 1 */
+  hi2c2.Instance = I2C2;
+  hi2c2.Init.ClockSpeed = 100000;
+  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c2.Init.OwnAddress1 = 0;
+  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c2.Init.OwnAddress2 = 0;
+  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C2_Init 2 */
+
+  /* USER CODE END I2C2_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -382,6 +460,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
