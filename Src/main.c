@@ -25,6 +25,8 @@
 /* USER CODE BEGIN Includes */
  #include "lcd.h"
  #include "stdbool.h"
+ #include <stdio.h>
+ #include <string.h>
  
 /* USER CODE END Includes */
 
@@ -63,6 +65,37 @@ static void MX_FSMC_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+	bool saveData(char dataName[], uint64_t value) {
+		if (strcmp(dataName, "targetNumRotation")) {
+			targetNumRotation = value;
+			return true;
+		} else if (strcmp(dataName, "curNumRotation")) {
+			curNumRotation = value;
+			return true;
+		} else if (strcmp(dataName, "targetHour")) {
+			targetHour = value;
+			return true;
+		} else if (strcmp(dataName, "curHour")) {
+			curHour = value;
+			return true;
+		}
+		return false;
+	}
+	
+	uint64_t loadData(char dataName[]) {
+		if (strcmp(dataName, "targetNumRotation")) {
+			return targetNumRotation;
+		} else if (strcmp(dataName, "curNumRotation")) {
+			return curNumRotation;
+		} else if (strcmp(dataName, "targetHour")) {
+			return targetHour;
+		} else if (strcmp(dataName, "curHour")) {
+			return curHour;
+		}
+		return -1;
+	}
+	
 	bool isTouched(void) {
 		bool touched = (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4)==GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
@@ -106,7 +139,7 @@ static void MX_FSMC_Init(void);
 		Manually input number of rotation turns
 		*/
 		char buffer[50];
-		sprintf(buffer, "%d", targetNumRotation);
+		sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
 		
 		LCD_DrawString(50,50,"Input rotation number");
 		LCD_DrawRectButton(50,150,150,40,"- 100 rotation");
@@ -120,15 +153,15 @@ static void MX_FSMC_Init(void);
 				getTouchCoord(&x, &y);
 				// decrement 100 rotation
 				if (x >= 50 && x <= 150 && y >= 150 && y <= 190) {
-					targetNumRotation -= 100;
-					sprintf(buffer, "%d", targetNumRotation);
+					saveData("targetNumRotation", loadData("targetNumRotation") - 100);
+					sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(150,100,buffer); 
 				}
 				// increment 100 rotation
 				else if (x >= 50 && x <= 150 && y >= 200 && y <= 240){
-					targetNumRotation += 100;
-					sprintf(buffer, "%d", targetNumRotation);
+					saveData("targetNumRotation", loadData("targetNumRotation") + 100);
+					sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(150,100,buffer); 
 				}
@@ -155,7 +188,7 @@ static void MX_FSMC_Init(void);
 		Manually input winding hour
 		*/
 		char buffer[50];
-		sprintf(buffer, "%0.1f hour", targetHour);
+		sprintf(buffer, "%0.1f hour", (double)loadData("targetHour"));
 		
 		LCD_DrawString(50,50,"Input winding hour");
 		LCD_DrawRectButton(50,150,100,40,"- 1/2 hour");
@@ -169,15 +202,15 @@ static void MX_FSMC_Init(void);
 				getTouchCoord(&x, &y);
 				// decrement 1/2 hour
 				if (x >= 50 && x <= 150 && y >= 150 && y <= 190) {
-					targetHour -= 0.5;
-					sprintf(buffer, "%0.1f	hour", targetHour);
+					saveData("targetHour", (double)loadData("targetHour") - 0.5);
+					sprintf(buffer, "%0.1f	hour", (double)loadData("targetHour"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(150,100,buffer); 
 				}
 				// increment 1/2 hour
 				else if (x >= 50 && x <= 150 && y >= 200 && y <= 240){
-					targetHour += 0.5;
-					sprintf(buffer, "%0.1f	hour", targetHour);
+					saveData("targetHour", (double)loadData("targetHour") + 0.5);
+					sprintf(buffer, "%0.1f	hour", (double)loadData("targetHour"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(150,100,buffer); 
 				}
@@ -258,10 +291,12 @@ static void MX_FSMC_Init(void);
 	void startWinding(void) {
 		// TODO: start rotation, update progress bar
 		int dir = 0;
-		for (int i = 0; i < 500; i++) {
+		int tnr = (int)loadData("targetNumRotation");
+		for (int i = 0; i < tnr; i++) {
 			rotateFullCycle(dir);
 			HAL_Delay(1000);
 			dir = !dir;
+			if (!saveData("curNumRotation", i)) break;
 		}
 	}
 
