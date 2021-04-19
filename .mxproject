@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=C:/Users/zhiyu/Desktop/elec3300_project/Inc
+HeaderPath=C:/Users/zhiyu/Desktop/elec3300-watch_winder/Inc
 HeaderFiles=stm32f1xx_it.h;stm32f1xx_hal_conf.h;main.h;
-SourcePath=C:/Users/zhiyu/Desktop/elec3300_project/Src
+SourcePath=C:/Users/zhiyu/Desktop/elec3300-watch_winder/Src
 SourceFiles=stm32f1xx_it.c;stm32f1xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]
