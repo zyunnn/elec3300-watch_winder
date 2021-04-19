@@ -27,6 +27,8 @@
  #include "stdbool.h"
  #include "lcdtp.h"
  #include "xpt2046.h"
+ #include <stdio.h>
+ #include <string.h>
  
 /* USER CODE END Includes */
 
@@ -77,6 +79,36 @@ static void MX_FSMC_Init(void);
 		return true;
 	}
 
+	bool saveData(char dataName[], double value) {
+		if (!strcmp(dataName, "targetNumRotation")) {
+			targetNumRotation = value;
+			return true;
+		} else if (!strcmp(dataName, "curNumRotation")) {
+			curNumRotation = value;
+			return true;
+		} else if (!strcmp(dataName, "targetHour")) {
+			targetHour = value;
+			return true;
+		} else if (!strcmp(dataName, "curHour")) {
+			curHour = value;
+			return true;
+		}
+		return false;
+	}
+	
+	double loadData(char dataName[]) {
+		if (!strcmp(dataName, "targetNumRotation")) {
+			return targetNumRotation;
+		} else if (!strcmp(dataName, "curNumRotation")) {
+			return curNumRotation;
+		} else if (!strcmp(dataName, "targetHour")) {
+			return targetHour;
+		} else if (!strcmp(dataName, "curHour")) {
+			return curHour;
+		}
+		return -1;
+	}
+	
 	bool isTouched(void) {
 		bool touched = (HAL_GPIO_ReadPin(GPIOE, GPIO_PIN_4)==GPIO_PIN_RESET);
 		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_4, GPIO_PIN_SET);
@@ -139,7 +171,7 @@ static void MX_FSMC_Init(void);
 					LCD_Clear(10,50,200,270,BACKGROUND);
 					LCD_DrawString(50,50,"Model selected");
 					LCD_DrawString(30,100,modelName[modelNo]);
-					targetNumRotation = modelTurn[modelNo];
+					saveData("targetNumRotation", modelTurn[modelNo]);
 					HAL_Delay(1000);
 					return;
 				}
@@ -152,7 +184,8 @@ static void MX_FSMC_Init(void);
 		Manually input number of rotation turns
 		*/
 		char buffer[50];
-		sprintf(buffer, "%d", targetNumRotation);
+		sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
+		
 		LCD_DrawString(50,50,"Input rotation number");
 		LCD_DrawRectButton(50,150,150,40,"- 100 rotation");
 		LCD_DrawRectButton(50,200,150,40,"+ 100 rotation");
@@ -165,16 +198,16 @@ static void MX_FSMC_Init(void);
 				XPT2046_Get_TouchedPoint(&coords, &touchPara);
 				// decrement by 100 rotation
 				if (coords.y >= 50 && coords.y <= 200 && coords.x >= 130 && coords.x <= 170) {		// 320-150, 320-190
-					targetNumRotation -= 100;
-					sprintf(buffer, "%d", targetNumRotation);
+					saveData("targetNumRotation", loadData("targetNumRotation") - 100);
+					sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(100,100,buffer); 
 					HAL_Delay(100);
 				}
 				// increment by 100 rotation
 				else if (coords.y >= 50 && coords.y <= 200 && coords.x >= 80 && coords.x <= 120){		// 320-200, 320-240
-					targetNumRotation += 100;
-					sprintf(buffer, "%d", targetNumRotation);
+					saveData("targetNumRotation", loadData("targetNumRotation") + 100);
+					sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(100,100,buffer); 
 					HAL_Delay(100);
@@ -200,7 +233,7 @@ static void MX_FSMC_Init(void);
 		Manually input winding hour
 		*/
 		char buffer[50];
-		sprintf(buffer, "%0.1f hour", targetHour);
+		sprintf(buffer, "%0.1f hour", (double)loadData("targetHour"));
 		
 		LCD_DrawString(50,50,"Input winding hour");
 		LCD_DrawRectButton(50,150,100,40,"- 1/2 hour");
@@ -214,16 +247,16 @@ static void MX_FSMC_Init(void);
 				XPT2046_Get_TouchedPoint(&coords, &touchPara);
 				// decrement by 1/2 hour
 				if (coords.y >= 50 && coords.y <= 150 && coords.x >= 130 && coords.x <= 170) {		// 320-150, 320-190
-					targetHour -= 0.5;
-					sprintf(buffer, "%0.1f	hour", targetHour);
+					saveData("targetHour", loadData("targetHour") - 0.5);
+					sprintf(buffer, "%0.1f	hour", (double)loadData("targetHour"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(100,100,buffer); 
 					HAL_Delay(100);
 				}
 				// increment by 1/2 hour
 				else if (coords.y >= 50 && coords.y <= 150 && coords.x >= 80 && coords.x <= 120){		// 320-200, 320-240
-					targetHour += 0.5;
-					sprintf(buffer, "%0.1f	hour", targetHour);
+					saveData("targetHour", loadData("targetHour") + 0.5);
+					sprintf(buffer, "%0.1f	hour", (double)loadData("targetHour"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
 					LCD_DrawString(100,100,buffer); 
 					HAL_Delay(100);
@@ -243,6 +276,65 @@ static void MX_FSMC_Init(void);
 			}
 		}
 	}
+
+	void rotateFullCycle(int mode) {
+		int t = 2;
+		switch (mode) {
+			case 0:
+				for (int i = 0; i < 512; i++){
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_Delay(t);
+
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_Delay(t);
+
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_Delay(t);
+
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
+					HAL_Delay(t);
+				}
+				break;
+			case 1:
+				for (int i = 0; i < 512; i++){
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
+					HAL_Delay(t);
+
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_Delay(t);
+
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_Delay(t);
+
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_Delay(t);
+				}
+			}
+	}
 	
 	void startRotate(void) {
 		/*
@@ -250,13 +342,22 @@ static void MX_FSMC_Init(void);
 		*/
 		LCD_Clear(50,50,200,200,BACKGROUND);
 		LCD_DrawString(50,50,"Rotating...");
+
+		int dir = 0;
+		int tnr = (int)loadData("targetNumRotation");
+		for (int i = 0; i < tnr; i++) {
+			rotateFullCycle(dir);
+			HAL_Delay(1000);
+			dir = !dir;
+			if (!saveData("curNumRotation", i)) break;
+		}
 	}
 	
 	void startWinding(void) {
 		// TODO: start rotation, update progress bar
 		char buffer1[50], buffer2[50];
-		sprintf(buffer1, "Number of rotation: %d", targetNumRotation);
-		sprintf(buffer2, "Winding duration: %0.1f hour", targetHour);
+		sprintf(buffer1, "Number of rotation: %d", (int)loadData("targetNumRotation"));
+		sprintf(buffer2, "Winding duration: %0.1f hour", (double)loadData("targetHour"));
 		
 		// BONUS TODO: Display expected end time of winding process?
 		LCD_DrawString(10,50,buffer1);
@@ -271,10 +372,9 @@ static void MX_FSMC_Init(void);
 				if (coords.y >= 50 && coords.y <= 200 && coords.x >= 130 && coords.x <= 170) {		// 320-150, 320-190
 					LCD_Clear(0, 0, 240, 320, BACKGROUND);
 					startRotate();
-			}
+				}
 			}
 		}
-
 	}
 
 	
@@ -294,7 +394,6 @@ int main(void)
 	int prevRotation, prevTargetRotation;
 	float prevHour, prevTargetHour;
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -348,10 +447,10 @@ int main(void)
 					XPT2046_Get_TouchedPoint(&coords, &touchPara);
 					// continue prev task
 					if (coords.y >= 30 && coords.y <= 100 && coords.x <= 170 && coords.x >= 120) {		// 320-150,320-200
-						curNumRotation = prevRotation;
-						curHour = prevHour;
-						targetNumRotation = prevTargetRotation;
-						targetHour = prevTargetHour;
+						saveData("curNumRotation", prevRotation);
+						saveData("curHour", prevHour);
+						saveData("targetNumRotation", prevTargetRotation);
+						saveData("targetHour", prevTargetHour);
 						setupReady = true;
 					}
 					// start a new task
@@ -396,7 +495,7 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -409,7 +508,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -436,11 +535,17 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_2|GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_2|GPIO_PIN_6|GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5|GPIO_PIN_7, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12|GPIO_PIN_13, GPIO_PIN_RESET);
@@ -463,6 +568,27 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PE6 */
+  GPIO_InitStruct.Pin = GPIO_PIN_6;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA5 PA7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PC4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PD12 PD13 */
   GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13;
@@ -559,7 +685,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
