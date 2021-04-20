@@ -61,7 +61,7 @@ void promptWatch(void);
 
 /* Private defines -----------------------------------------------------------*/
 /* USER CODE BEGIN Private defines */
-
+#define refractoryPeriod 100
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

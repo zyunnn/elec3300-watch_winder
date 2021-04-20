@@ -27,3 +27,4 @@ elec3300_project\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_l
 elec3300_project\stm32f1xx_it.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_pwr.h
 elec3300_project\stm32f1xx_it.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 elec3300_project\stm32f1xx_it.o: ../Inc/stm32f1xx_it.h
+elec3300_project\stm32f1xx_it.o: ../Src/lcdtp.h

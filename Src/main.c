@@ -39,7 +39,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -54,6 +53,8 @@ SRAM_HandleTypeDef hsram1;
 int targetNumRotation, curNumRotation;
 float targetHour = 0;
 float curHour;
+bool interruptFlag = false;
+unsigned int interruptTimer = refractoryPeriod;
 strType_XPT2046_TouchPara touchPara = {0.085958, -0.001073, -4.979353, -0.001750, 0.065168, -13.318824};
 
 char *modelName[] = {"CARTIER Santos", "CHOPARD LUC 1937", "HUBLOT 1915", "PIAGET Altiplano", "ROLEX Cellini"};
@@ -64,6 +65,7 @@ int modelTurn[5] = {700, 800, 650, 1340, 650};
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_FSMC_Init(void);
+static void MX_NVIC_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -107,6 +109,10 @@ static void MX_FSMC_Init(void);
 			return curHour;
 		}
 		return -1;
+	}
+	
+	void incrementInterruptTimer (int step) {
+		interruptTimer = interruptTimer == refractoryPeriod? refractoryPeriod: interruptTimer + step;
 	}
 	
 	bool isTouched(void) {
@@ -279,9 +285,11 @@ static void MX_FSMC_Init(void);
 
 	void rotateFullCycle(int mode) {
 		int t = 2;
-		switch (mode) {
-			case 0:
-				for (int i = 0; i < 512; i++){
+		char buffer[50];
+		for (int i = 0; i < 512; i++){
+			incrementInterruptTimer(1);
+			switch (mode) {
+				case 0:
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
@@ -305,10 +313,8 @@ static void MX_FSMC_Init(void);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
 					HAL_Delay(t);
-				}
-				break;
-			case 1:
-				for (int i = 0; i < 512; i++){
+					break;
+				case 1:
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
@@ -332,8 +338,8 @@ static void MX_FSMC_Init(void);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
 					HAL_Delay(t);
-				}
 			}
+		}
 	}
 	
 	void startRotate(void) {
@@ -346,6 +352,11 @@ static void MX_FSMC_Init(void);
 		int dir = 0;
 		int tnr = (int)loadData("targetNumRotation");
 		for (int i = 0; i < tnr; i++) {
+			LCD_Clear(50, 100, 200, 20, BACKGROUND);
+			while(interruptFlag) {
+				LCD_Clear(50, 100, 200, 20, BACKGROUND);
+				incrementInterruptTimer(1);
+			}
 			rotateFullCycle(dir);
 			HAL_Delay(1000);
 			dir = !dir;
@@ -413,6 +424,9 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_FSMC_Init();
+
+  /* Initialize interrupts */
+  MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
 	macXPT2046_CS_DISABLE();
 	LCD_INIT();
@@ -524,6 +538,20 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief NVIC Configuration.
+  * @retval None
+  */
+static void MX_NVIC_Init(void)
+{
+  /* EXTI4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+  /* EXTI9_5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -537,6 +565,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOE, GPIO_PIN_2|GPIO_PIN_6|GPIO_PIN_0|GPIO_PIN_1, GPIO_PIN_RESET);
@@ -597,9 +626,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+  /*Configure GPIO pin : PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 }
 

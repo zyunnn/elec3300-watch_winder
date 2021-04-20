@@ -5,11 +5,9 @@
 "elec3300_project\stm32f1xx_hal_msp.o"
 "elec3300_project\lcdtp.o"
 "elec3300_project\xpt2046.o"
+"elec3300_project\system_stm32f1xx.o"
 "elec3300_project\stm32f1xx_hal_gpio_ex.o"
 "elec3300_project\stm32f1xx_ll_fsmc.o"
-"elec3300_project\stm32f1xx_hal_sram.o"
-"elec3300_project\stm32f1xx_hal_tim.o"
-"elec3300_project\stm32f1xx_hal_tim_ex.o"
 "elec3300_project\stm32f1xx_hal.o"
 "elec3300_project\stm32f1xx_hal_rcc.o"
 "elec3300_project\stm32f1xx_hal_rcc_ex.o"
@@ -19,7 +17,9 @@
 "elec3300_project\stm32f1xx_hal_pwr.o"
 "elec3300_project\stm32f1xx_hal_flash.o"
 "elec3300_project\stm32f1xx_hal_flash_ex.o"
-"elec3300_project\system_stm32f1xx.o"
+"elec3300_project\stm32f1xx_hal_sram.o"
+"elec3300_project\stm32f1xx_hal_tim.o"
+"elec3300_project\stm32f1xx_hal_tim_ex.o"
 --library_type=microlib --strict --scatter "elec3300_project\elec3300_project.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
