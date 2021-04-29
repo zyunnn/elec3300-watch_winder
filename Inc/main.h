@@ -37,7 +37,12 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+typedef struct 
+{
+	int targetNumRotation, curNumRotation;
+	float targetHour, curHour;
+	int windDir;
+} windingTask;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

@@ -40,6 +40,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
  #define DEFAULT_FONTSIZE 	16
+ #define BASE_ADDR 					0x08007C00
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -51,10 +52,12 @@
 SRAM_HandleTypeDef hsram1;
 
 /* USER CODE BEGIN PV */
+// TODO: define Task object
 int windDir = 0; // 0=clockwise, 1=anticlockwise, 2=bi-directional
 int targetNumRotation, curNumRotation;
 float targetHour = 0;
 float curHour;
+
 bool interruptFlag = false;
 unsigned int interruptTimer = refractoryPeriod;
 strType_XPT2046_TouchPara touchPara = {0.085958, -0.001073, -4.979353, -0.001750, 0.065168, -13.318824};
@@ -84,6 +87,7 @@ static void MX_NVIC_Init(void);
 	}
 
 	bool saveData(char dataName[], double value) {
+		uint64_t targetAddr = BASE_ADDR;
 		if (!strcmp(dataName, "targetNumRotation")) {
 			targetNumRotation = value;
 			return true;
@@ -287,6 +291,28 @@ static void MX_NVIC_Init(void);
 		}
 	}
 
+	bool startNewTask(void) {
+		LCD_Clear (0, 0, 240, 320, BACKGROUND);
+		LCD_DrawString (20, 50, "Starting new task...", DEFAULT_FONTSIZE);
+		HAL_Delay(500);
+		LCD_Clear (0, 0, 240, 320, BACKGROUND);
+		int inputType = selectInputType();
+		switch(inputType) {
+			case 0:			// predefined input
+				LCD_Clear (0, 0, 240, 320, BACKGROUND);
+				selectModel();
+				break;
+			case 1: 		
+				LCD_Clear (0, 0, 240, 320, BACKGROUND);
+				inputTurn();
+				LCD_Clear (0, 0, 240, 320, BACKGROUND);
+				inputHour();
+				break;
+		}
+		return true;
+	}
+	
+	
 	void rotateFullCycle(int mode) {
 		int t = 2;
 		char buffer[50];
@@ -357,7 +383,7 @@ static void MX_NVIC_Init(void);
 		
 		int dir = (int)loadData("windDir") == 2? 0: (int)loadData("windDir");
 		int tnr = (int)loadData("targetNumRotation");
-		tnr = 20;  	 // check progressBar
+		tnr = 2;  	 // check progressBar
 		
 		progressBar pb;
 		pb.range = tnr;
@@ -401,6 +427,7 @@ static void MX_NVIC_Init(void);
 				if (coords.y >= 50 && coords.y <= 200 && coords.x >= 130 && coords.x <= 170) {		// 320-150, 320-190
 					LCD_Clear(0, 0, 240, 320, BACKGROUND);
 					startRotate();
+					break; 		// finish rotation
 				}
 			}
 		}
@@ -466,7 +493,6 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	bool setupReady = false;
-	
   while (1)
   {		
     if (prevFlag) {
@@ -479,7 +505,7 @@ int main(void)
 					XPT2046_Get_TouchedPoint(&coords, &touchPara);
 					// continue prev task
 					if (coords.y >= 30 && coords.y <= 100 && coords.x <= 170 && coords.x >= 120) {		// 320-150,320-200
-						saveData("curNumRotation", prevRotation);
+						saveData("curNumRotation", prevRotation);			
 						saveData("curHour", prevHour);
 						saveData("targetNumRotation", prevTargetRotation);
 						saveData("targetHour", prevTargetHour);
@@ -487,8 +513,9 @@ int main(void)
 					}
 					// start a new task
 					else if (coords.y >= 130 && coords.y <= 200 && coords.x <= 170 && coords.x >= 120){		// 320-150, 320-200
-						if (isTouched()) {
-							LCD_Clear (0, 0, 240, 320, BACKGROUND);
+						setupReady = startNewTask();
+//						if (isTouched()) {
+/*							LCD_Clear (0, 0, 240, 320, BACKGROUND);
 							int inputType = selectInputType();
 							switch(inputType) {
 								case 0:			// predefined input
@@ -504,13 +531,21 @@ int main(void)
 									setupReady = true;
 									break;
 							}
-						}
+							*/
+//						}
 					}
 				}
 			}
-			LCD_Clear (0, 0, 240, 320, BACKGROUND);
-			startWinding();
 		}
+		// Setup new task
+		else {
+			setupReady = startNewTask();
+		}
+		LCD_Clear (0, 0, 240, 320, BACKGROUND);
+		startWinding();
+		prevFlag = false;
+		setupReady = false;
+		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
