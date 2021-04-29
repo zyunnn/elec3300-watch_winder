@@ -54,16 +54,18 @@ SRAM_HandleTypeDef hsram1;
 /* USER CODE BEGIN PV */
 // TODO: define Task object
 int windDir = 0; // 0=clockwise, 1=anticlockwise, 2=bi-directional
+char *windDirName[3] = {"clockwise", "anti-clockwise", "bi-directional"};
 int targetNumRotation, curNumRotation;
-float targetHour = 0;
+float targetHour = 24;
 float curHour;
 
 bool interruptFlag = false;
 unsigned int interruptTimer = refractoryPeriod;
 strType_XPT2046_TouchPara touchPara = {0.085958, -0.001073, -4.979353, -0.001750, 0.065168, -13.318824};
 
-char *modelName[] = {"CARTIER Santos", "CHOPARD LUC 1937", "HUBLOT 1915", "PIAGET Altiplano", "ROLEX Cellini"};
-int modelTurn[5] = {700, 800, 650, 1340, 650};
+char *modelName[] = {"AP Royal Oak 2012", "CHOPARD LUC 1937", "HUBLOT 1915", "PIAGET Altiplano", "OMEGA Seamaster"};
+int modelTurn[5] = {800, 800, 650, 1340, 650};
+int modelWindDir[5] = {0,0,2,1,2};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -133,16 +135,15 @@ static void MX_NVIC_Init(void);
 	}
 	
 	int selectInputType(void) {
-		LCD_DrawString(50,50,"Select input type", DEFAULT_FONTSIZE);
-		LCD_DrawRectButton(50,150,150,40,"Predefined model", BLACK);
-		LCD_DrawRectButton(50,200,150,40,"Manual input", BLACK);
+		LCD_DrawString(50,50,"Configure run from", DEFAULT_FONTSIZE);
+		LCD_DrawRectButton(50,150,150,40,"Model List", BLACK);
+		LCD_DrawRectButton(50,200,150,40,"Manual Input", BLACK);
 		HAL_Delay(300);
 		
 		strType_XPT2046_Coordinate coords;
 		while (true) {
 			if (isTouched()) {
 				XPT2046_Get_TouchedPoint(&coords, &touchPara);
-				char buffer[50];
 				// option1: predefined model
 				if ((int)coords.y >= 50 && (int)coords.y <= 200 && (int)coords.x >= 130 && (int)coords.x <= 170) {		// 320-150, 320-190
 					return 0;
@@ -170,7 +171,7 @@ static void MX_NVIC_Init(void);
 		*/
 		char buffer[50];
 		sprintf(buffer, "%d", targetNumRotation);	
-		LCD_DrawString(50,50,"Select watch model",DEFAULT_FONTSIZE);
+		LCD_DrawString(45,50,"Select watch model",DEFAULT_FONTSIZE);
 		int startP = 100, height = 40;
 		// display 5 predefined models
 		for(int i = 0; i < 5; i++) {
@@ -183,10 +184,11 @@ static void MX_NVIC_Init(void);
 				if(coords.y >= 30 && coords.y <= 200) {
 					int modelNo = (int)((320-coords.x-startP)/40);	
 					LCD_Clear(10,50,200,270,BACKGROUND);
-					LCD_DrawString(50,50,"Model selected",DEFAULT_FONTSIZE);
-					LCD_DrawString(30,100,modelName[modelNo],DEFAULT_FONTSIZE);
+					LCD_DrawString(60,50,"Model selected:",DEFAULT_FONTSIZE);
+					LCD_DrawString(50,100,modelName[modelNo],DEFAULT_FONTSIZE);
 					saveData("targetNumRotation", modelTurn[modelNo]);
-					HAL_Delay(1000);
+					saveData("windDir", modelWindDir[modelNo]);
+					HAL_Delay(500);
 					return;
 				}
 			}
@@ -379,11 +381,11 @@ static void MX_NVIC_Init(void);
 		Rotate 
 		*/
 		LCD_Clear(50,50,200,200,BACKGROUND);
-		LCD_DrawString(50,50,"Rotating...", DEFAULT_FONTSIZE);
+		LCD_DrawString(80,50,"Rotating...", DEFAULT_FONTSIZE);
 		
 		int dir = (int)loadData("windDir") == 2? 0: (int)loadData("windDir");
 		int tnr = (int)loadData("targetNumRotation");
-		tnr = 2;  	 // check progressBar
+		//tnr = 20;  	 // check progressBar
 		
 		progressBar pb;
 		pb.range = tnr;
@@ -410,13 +412,15 @@ static void MX_NVIC_Init(void);
 	
 	void startWinding(void) {
 		// TODO: start rotation, update progress bar
-		char buffer1[50], buffer2[50];
-		sprintf(buffer1, "Number of rotation: %d", (int)loadData("targetNumRotation"));
-		sprintf(buffer2, "Winding duration: %0.1f hour", (double)loadData("targetHour"));
+		char buffer1[50], buffer2[50], buffer3[50];
+		sprintf(buffer1, "Number of turns: %d", (int)loadData("targetNumRotation"));
+		sprintf(buffer2, "Duration: %0.1f hour", (double)loadData("targetHour"));
+		sprintf(buffer3, "Direction: %s", windDirName[(int)loadData("windDir")]);
 		
 		// BONUS TODO: Display expected end time of winding process?
-		LCD_DrawString(10,50,buffer1,DEFAULT_FONTSIZE);
-		LCD_DrawString(10, 100, buffer2,DEFAULT_FONTSIZE);
+		LCD_DrawString(10, 50,buffer1,DEFAULT_FONTSIZE);
+		LCD_DrawString(10, 80, buffer2,DEFAULT_FONTSIZE);
+		LCD_DrawString(10, 110, buffer3,DEFAULT_FONTSIZE);
 		LCD_DrawRectButton(70,150,100,50,"Start",BLACK);
 		LCD_DrawString(20,300,"<< Back",DEFAULT_FONTSIZE);
 		
