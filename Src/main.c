@@ -28,7 +28,9 @@
  #include "lcdtp.h"
  #include "xpt2046.h"
  #include <stdio.h>
+ #include <stdlib.h>
  #include <string.h>
+ #include <time.h>
  
 /* USER CODE END Includes */
 
@@ -385,6 +387,8 @@ static void MX_NVIC_Init(void);
 		
 		int dir = (int)loadData("windDir") == 2? 0: (int)loadData("windDir");
 		int tnr = (int)loadData("targetNumRotation");
+		int delayBetweenWind = (int)(double)loadData("targetHour")*60*60*1000/tnr - 6;
+		delayBetweenWind = 1000;
 		//tnr = 20;  	 // check progressBar
 		
 		progressBar pb;
@@ -394,7 +398,7 @@ static void MX_NVIC_Init(void);
 		pb.width = 204;
 		pb.height = 20;
 		LCD_DrawRectButton(pb.left,pb.top,pb.width,pb.height,"",BLACK);
-
+		
 		for (int i = 0; i < tnr; i++) {
 			LCD_Clear(50, 100, 200, 20, BACKGROUND);
 			while(interruptFlag) {
@@ -403,8 +407,10 @@ static void MX_NVIC_Init(void);
 			}
 			rotateFullCycle(dir);
 			LCD_UpdatePb(&pb, i+1,BLUE);
-			if ((int)loadData("windDir") == 2) dir = !dir;
-			HAL_Delay(1000);
+			if ((rand() % 2) && (int)loadData("windDir") == 2) {
+				dir = !dir;
+				HAL_Delay(delayBetweenWind);
+			}
 			if (!saveData("curNumRotation", i)) break;
 		}
 
