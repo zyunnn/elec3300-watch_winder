@@ -39,6 +39,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+ #define DEFAULT_FONTSIZE 	16
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -121,15 +122,10 @@ static void MX_NVIC_Init(void);
 		return touched;
 	}
 	
-	void getTouchCoord(float* x_coord, float* y_coord) {
-		// TODO: get touch coordinates using HAL library
-		return;
-	}
-	
 	int selectInputType(void) {
-		LCD_DrawString(50,50,"Select input type");
-		LCD_DrawRectButton(50,150,150,40,"Predefined model");
-		LCD_DrawRectButton(50,200,150,40,"Manual input");
+		LCD_DrawString(50,50,"Select input type", DEFAULT_FONTSIZE);
+		LCD_DrawRectButton(50,150,150,40,"Predefined model", BLACK);
+		LCD_DrawRectButton(50,200,150,40,"Manual input", BLACK);
 		HAL_Delay(300);
 		
 		strType_XPT2046_Coordinate coords;
@@ -147,10 +143,12 @@ static void MX_NVIC_Init(void);
 			}
 				// invalid input
 				else {
-					sprintf(buffer, "Invalid x: %d, y: %d", (int)coords.x, (int)coords.y);
-					LCD_Clear(50,50,50,200,BACKGROUND);
-					LCD_DrawString(50,100,buffer);
+//					sprintf(buffer, "Please select valid input x: %d, y: %d", (int)coords.x, (int)coords.y);
+					LCD_Clear(50,50,200,50,BACKGROUND);
+					LCD_DrawString(40,50,"Please select valid input",8);
 					HAL_Delay(500);
+					LCD_Clear(0,50,240,50,BACKGROUND);
+					LCD_DrawString(50,50,"Select input type", DEFAULT_FONTSIZE);
 				}
 		}
 	}
@@ -162,11 +160,11 @@ static void MX_NVIC_Init(void);
 		*/
 		char buffer[50];
 		sprintf(buffer, "%d", targetNumRotation);	
-		LCD_DrawString(50,50,"Select watch model");
+		LCD_DrawString(50,50,"Select watch model",DEFAULT_FONTSIZE);
 		int startP = 100, height = 40;
 		// display 5 predefined models
 		for(int i = 0; i < 5; i++) {
-			LCD_DrawRectButton(30,startP+(i*height),170,height,modelName[i]);
+			LCD_DrawRectButton(30,startP+(i*height),170,height,modelName[i], BLACK);
 		}		
 		strType_XPT2046_Coordinate coords;
 		while(true) {
@@ -175,8 +173,8 @@ static void MX_NVIC_Init(void);
 				if(coords.y >= 30 && coords.y <= 200) {
 					int modelNo = (int)((320-coords.x-startP)/40);	
 					LCD_Clear(10,50,200,270,BACKGROUND);
-					LCD_DrawString(50,50,"Model selected");
-					LCD_DrawString(30,100,modelName[modelNo]);
+					LCD_DrawString(50,50,"Model selected",DEFAULT_FONTSIZE);
+					LCD_DrawString(30,100,modelName[modelNo],DEFAULT_FONTSIZE);
 					saveData("targetNumRotation", modelTurn[modelNo]);
 					HAL_Delay(1000);
 					return;
@@ -192,11 +190,11 @@ static void MX_NVIC_Init(void);
 		char buffer[50];
 		sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
 		
-		LCD_DrawString(50,50,"Input rotation number");
-		LCD_DrawRectButton(50,150,150,40,"- 100 rotation");
-		LCD_DrawRectButton(50,200,150,40,"+ 100 rotation");
-		LCD_DrawString(170,300,"Next >>");
-		LCD_DrawString(100,100,buffer); 	
+		LCD_DrawString(50,50,"Input rotation number",DEFAULT_FONTSIZE);
+		LCD_DrawRectButton(50,150,150,40,"- 100 rotation", BLACK);
+		LCD_DrawRectButton(50,200,150,40,"+ 100 rotation", BLACK);
+		LCD_DrawString(170,300,"Next >>",DEFAULT_FONTSIZE);
+		LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 	
 		
 		strType_XPT2046_Coordinate coords;
 		while (true) {	
@@ -207,7 +205,7 @@ static void MX_NVIC_Init(void);
 					saveData("targetNumRotation", loadData("targetNumRotation") - 100);
 					sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer); 
+					LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 
 					HAL_Delay(100);
 				}
 				// increment by 100 rotation
@@ -215,7 +213,7 @@ static void MX_NVIC_Init(void);
 					saveData("targetNumRotation", loadData("targetNumRotation") + 100);
 					sprintf(buffer, "%d", (int)loadData("targetNumRotation"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer); 
+					LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 
 					HAL_Delay(100);
 				}
 				// finish input, move to next input option
@@ -224,10 +222,10 @@ static void MX_NVIC_Init(void);
 				}	
 				// invalid input
 				else {
-					LCD_DrawString(20,100,"Please select valid input.");
+					LCD_DrawString(20,100,"Please select valid input.",DEFAULT_FONTSIZE);
 					HAL_Delay(1000);
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer);
+					LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE);
 					HAL_Delay(100);
 				}
 			}
@@ -241,11 +239,11 @@ static void MX_NVIC_Init(void);
 		char buffer[50];
 		sprintf(buffer, "%0.1f hour", (double)loadData("targetHour"));
 		
-		LCD_DrawString(50,50,"Input winding hour");
-		LCD_DrawRectButton(50,150,100,40,"- 1/2 hour");
-		LCD_DrawRectButton(50,200,100,40,"+ 1/2 hour");
-		LCD_DrawString(170,300,"Next >>");
-		LCD_DrawString(100,100,buffer); 
+		LCD_DrawString(50,50,"Input winding hour",DEFAULT_FONTSIZE);
+		LCD_DrawRectButton(50,150,100,40,"- 1/2 hour", BLACK);
+		LCD_DrawRectButton(50,200,100,40,"+ 1/2 hour", BLACK);
+		LCD_DrawString(170,300,"Next >>",DEFAULT_FONTSIZE);
+		LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 
 		
 		strType_XPT2046_Coordinate coords;
 		while (true) {
@@ -256,7 +254,7 @@ static void MX_NVIC_Init(void);
 					saveData("targetHour", loadData("targetHour") - 0.5);
 					sprintf(buffer, "%0.1f	hour", (double)loadData("targetHour"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer); 
+					LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 
 					HAL_Delay(100);
 				}
 				// increment by 1/2 hour
@@ -264,7 +262,7 @@ static void MX_NVIC_Init(void);
 					saveData("targetHour", loadData("targetHour") + 0.5);
 					sprintf(buffer, "%0.1f	hour", (double)loadData("targetHour"));
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer); 
+					LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 
 					HAL_Delay(100);
 				}
 				// finish input, move to next operation
@@ -273,10 +271,10 @@ static void MX_NVIC_Init(void);
 				}	
 				// invalid input
 				else {
-					LCD_DrawString(20,100,"Please select valid input.");
+					LCD_DrawString(20,100,"Please select valid input.",DEFAULT_FONTSIZE);
 					HAL_Delay(1000);
 					LCD_Clear (10, 100, 240, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer);
+					LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE);
 					HAL_Delay(100);
 				}
 			}
@@ -342,15 +340,27 @@ static void MX_NVIC_Init(void);
 		}
 	}
 	
+
+	
 	void startRotate(void) {
 		/*
 		Rotate 
 		*/
 		LCD_Clear(50,50,200,200,BACKGROUND);
-		LCD_DrawString(50,50,"Rotating...");
+		LCD_DrawString(50,50,"Winding watch...",DEFAULT_FONTSIZE);
 
 		int dir = 0;
 		int tnr = (int)loadData("targetNumRotation");
+		tnr = 20;  	 // check progressBar
+		
+		progressBar pb;
+		pb.range = tnr;
+		pb.left = 18;
+		pb.top = 150;
+		pb.width = 204;
+		pb.height = 20;
+		LCD_DrawRectButton(pb.left,pb.top,pb.width,pb.height,"",BLACK);
+
 		for (int i = 0; i < tnr; i++) {
 			LCD_Clear(50, 100, 200, 20, BACKGROUND);
 			while(interruptFlag) {
@@ -358,6 +368,7 @@ static void MX_NVIC_Init(void);
 				incrementInterruptTimer(1);
 			}
 			rotateFullCycle(dir);
+			LCD_UpdatePb(&pb, i+1,BLUE);
 			HAL_Delay(1000);
 			dir = !dir;
 			if (!saveData("curNumRotation", i)) break;
@@ -371,10 +382,10 @@ static void MX_NVIC_Init(void);
 		sprintf(buffer2, "Winding duration: %0.1f hour", (double)loadData("targetHour"));
 		
 		// BONUS TODO: Display expected end time of winding process?
-		LCD_DrawString(10,50,buffer1);
-		LCD_DrawString(10, 100, buffer2);
-		LCD_DrawRectButton(70,150,100,50,"Start");
-		LCD_DrawString(20,300,"<< Back");
+		LCD_DrawString(10,50,buffer1,DEFAULT_FONTSIZE);
+		LCD_DrawString(10, 100, buffer2,DEFAULT_FONTSIZE);
+		LCD_DrawRectButton(70,150,100,50,"Start",BLACK);
+		LCD_DrawString(20,300,"<< Back",DEFAULT_FONTSIZE);
 		
 		strType_XPT2046_Coordinate coords;
 		while (true) {
@@ -390,7 +401,7 @@ static void MX_NVIC_Init(void);
 
 	
 	void promptWatch(void) {
-		LCD_DrawString(50,50,"Place watch to start winding.");
+		LCD_DrawString(50,50,"Place watch to start winding.",DEFAULT_FONTSIZE);
 	}
 	
 /* USER CODE END 0 */
@@ -452,9 +463,9 @@ int main(void)
   while (1)
   {		
     if (prevFlag) {
-			LCD_DrawString(30,50,"Continue previous task?");
-			LCD_DrawRectButton(30,150,70,50, "Yes");
-			LCD_DrawRectButton(130,150,70,50, "No");
+			LCD_DrawString(30,50,"Continue previous task?",DEFAULT_FONTSIZE);
+			LCD_DrawRectButton(30,150,70,50, "Yes", BLACK);
+			LCD_DrawRectButton(130,150,70,50, "No", BLACK);
 			while (!setupReady) {
 				if (isTouched()) {
 					strType_XPT2046_Coordinate coords;

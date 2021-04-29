@@ -52,7 +52,16 @@
 
 #define      CMD_Set_COLUMN		 0x2A	     
 #define      CMD_Set_PAGE		   0x2B	     
-#define      CMD_SetPixel		   0x2C	     
+#define      CMD_SetPixel		   0x2C	   
+
+/* Progress Bar */
+typedef struct 
+{
+	int range;
+	int left, top;
+	int width, height;	
+	
+} progressBar;
 
 void         		LCD_INIT		( void );
 void           	LCD_Rst			( void );
@@ -66,7 +75,7 @@ void            LCD_Clear		( uint16_t usC, uint16_t usP, uint16_t usWidth, uint1
 uint16_t        LCD_GetPointPixel	( uint16_t usC , uint16_t usP );
 void            LCD_DrawLine		( uint16_t usC1, uint16_t usP1, uint16_t usC2, uint16_t usP2, uint16_t usColor );
 void            LCD_DrawChar		( uint16_t usC, uint16_t usP, const char cChar);
-void            LCD_DrawString		( uint16_t usC, uint16_t usP, const char * pStr);
+void            LCD_DrawString		( uint16_t usC, uint16_t usP, const char * pStr, int fontSize);
 void            LCD_DrawDot		( uint16_t usC, uint16_t usP, uint16_t usColor );
 void 						LCD_DrawCircle		( uint16_t usC, uint16_t usP, uint16_t R, uint16_t usColor);
 
@@ -74,7 +83,7 @@ void LCD_DrawCross ( uint16_t usX, uint16_t usY );
 void LCD_DrawChar_Color ( uint16_t usC, uint16_t usP, const char cChar, uint16_t usColor_Background, uint16_t usColor_Foreground );
 void LCD_DrawChar_Color ( uint16_t usC, uint16_t usP, const char cChar, uint16_t usColor_Background, uint16_t usColor_Foreground );
 void LCD_GramScan ( uint8_t ucOption );
-void LCD_DrawRectButton( int startC, int startP, int width, int height, char* label );
-
+void LCD_DrawRectButton( int startC, int startP, int width, int height, char* label, uint16_t usColor );
+int LCD_UpdatePb( progressBar* pb, int curProgress, uint16_t usColor ); 
 #endif 
 
