@@ -381,7 +381,7 @@ static void MX_NVIC_Init(void);
 		Rotate 
 		*/
 		LCD_Clear(50,50,200,200,BACKGROUND);
-		LCD_DrawString(80,50,"Rotating...", DEFAULT_FONTSIZE);
+		LCD_DrawString(60,50,"Winding watch...", DEFAULT_FONTSIZE);
 		
 		int dir = (int)loadData("windDir") == 2? 0: (int)loadData("windDir");
 		int tnr = (int)loadData("targetNumRotation");
