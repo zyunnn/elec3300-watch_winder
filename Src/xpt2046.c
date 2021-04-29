@@ -415,10 +415,10 @@ uint8_t XPT2046_Touch_Calibrate ( void )
 			LCD_Clear ( 0, 0, usScreenWidth, usScreenHeigth, BACKGROUND );       
 			
 			pStr = "Touch Calibrate ......";			
-      LCD_DrawString_Color ( ( usScreenWidth - ( strlen ( pStr ) - 7 ) * WIDTH_EN_CHAR ) >> 1, usScreenHeigth >> 1, pStr, BACKGROUND, RED );			
+      LCD_DrawString_Color ( ( usScreenWidth - ( strlen ( pStr ) - 7 ) * WIDTH_EN_CHAR ) >> 1, usScreenHeigth >> 1, pStr, BACKGROUND, RED, 16);			
 		
 			sprintf ( cStr, "%d", i + 1 );
-			LCD_DrawString_Color ( usScreenWidth >> 1, ( usScreenHeigth >> 1 ) - HEIGHT_EN_CHAR, cStr, BACKGROUND, RED );
+			LCD_DrawString_Color ( usScreenWidth >> 1, ( usScreenHeigth >> 1 ) - HEIGHT_EN_CHAR, cStr, BACKGROUND, RED, 16 );
 		
 			XPT2046_DelayUS ( 100000 );		                                                   
 			
@@ -459,7 +459,7 @@ uint8_t XPT2046_Touch_Calibrate ( void )
 	LCD_Clear ( 0, 0, usScreenWidth, usScreenHeigth, BACKGROUND );
 	
 	pStr = "Calibrate Succed";			
-	LCD_DrawString_Color ( ( usScreenWidth - strlen ( pStr ) * WIDTH_EN_CHAR ) >> 1, usScreenHeigth >> 1, pStr, BACKGROUND, RED );	
+	LCD_DrawString_Color ( ( usScreenWidth - strlen ( pStr ) * WIDTH_EN_CHAR ) >> 1, usScreenHeigth >> 1, pStr, BACKGROUND, RED, 16 );	
 
   XPT2046_DelayUS ( 200000 );
 
@@ -471,10 +471,10 @@ uint8_t XPT2046_Touch_Calibrate ( void )
 	LCD_Clear ( 0, 0, usScreenWidth, usScreenHeigth, BACKGROUND ); 
 	
 	pStr = "Calibrate fail";			
-	LCD_DrawString_Color ( ( usScreenWidth - strlen ( pStr ) * WIDTH_EN_CHAR ) >> 1, usScreenHeigth >> 1, pStr, BACKGROUND, RED );	
+	LCD_DrawString_Color ( ( usScreenWidth - strlen ( pStr ) * WIDTH_EN_CHAR ) >> 1, usScreenHeigth >> 1, pStr, BACKGROUND, RED, 16 );	
 
 	pStr = "try again";			
-	LCD_DrawString_Color ( ( usScreenWidth - strlen ( pStr ) * WIDTH_EN_CHAR ) >> 1, ( usScreenHeigth >> 1 ) + HEIGHT_EN_CHAR, pStr, BACKGROUND, RED );				
+	LCD_DrawString_Color ( ( usScreenWidth - strlen ( pStr ) * WIDTH_EN_CHAR ) >> 1, ( usScreenHeigth >> 1 ) + HEIGHT_EN_CHAR, pStr, BACKGROUND, RED, 16 );				
 
 	XPT2046_DelayUS ( 1000000 );		
 	

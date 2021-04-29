@@ -23,11 +23,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
 #include "stdbool.h"
 #include "lcdtp.h"
 #include "xpt2046.h"
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+
  
 /* USER CODE END Includes */
 
@@ -66,6 +69,7 @@
 	char *modelName[] = {"CARTIER Santos", "CHOPARD LUC 1937", "HUBLOT 1915", "PIAGET Altiplano", "ROLEX Cellini"};
 	int modelTurn[5] = {700, 800, 650, 1340, 650};
 	int modelWindDir[5] = {0,0,2,1,2};
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -190,9 +194,9 @@
 		/*
 		Helper function to choose predefined model/manual input
 		*/
-		LCD_DrawString(50,50,"Select input type", DEFAULT_FONTSIZE);
-		LCD_DrawRectButton(50,150,150,40,"Predefined model", BLACK);
-		LCD_DrawRectButton(50,200,150,40,"Manual input", BLACK);
+		LCD_DrawString(50,50,"Configure run from", DEFAULT_FONTSIZE);
+		LCD_DrawRectButton(50,150,150,40,"Model List", BLACK);
+		LCD_DrawRectButton(50,200,150,40,"Manual Input", BLACK);
 		HAL_Delay(300);
 		
 		strType_XPT2046_Coordinate coords;
@@ -484,12 +488,14 @@
 		/*
 		Rotate 
 		*/
-		LCD_Clear(0,0,240,320,BACKGROUND);
-		LCD_DrawString(50,50,"Rotating...", DEFAULT_FONTSIZE);
+		LCD_Clear(50,50,200,200,BACKGROUND);
+		LCD_DrawString(60,50,"Winding watch...", DEFAULT_FONTSIZE);
 		
 		int dir = (int)loadData("windDir") == 2? 0: (int)loadData("windDir");
 		int tnr = task->targetNumRotation;
-		tnr = 2;  	 // for debug purpose
+		int delayBetweenWind = (int)(double)loadData("targetHour")*60*60*1000/tnr - 6;
+		delayBetweenWind = 1000;
+		//tnr = 20;  	 // check progressBar
 		
 		progressBar pb;
 		pb.range = tnr;
@@ -498,7 +504,7 @@
 		pb.width = 204;
 		pb.height = 20;
 		LCD_DrawRectButton(pb.left,pb.top,pb.width,pb.height,"",BLACK);
-
+		
 		for (int i = 0; i < tnr; i++) {
 			LCD_Clear(50, 100, 200, 20, BACKGROUND);
 			while(interruptFlag) {
@@ -506,15 +512,18 @@
 				incrementInterruptTimer(1);
 			}
 			rotateFullCycle(dir);
-			LCD_UpdatePb(&pb, i+1, BLUE);
-			if ((int)loadData("windDir") == 2) dir = !dir;
-			HAL_Delay(1000);
+			LCD_UpdatePb(&pb, i+1,BLUE);
 			task->curNumRotation = i;
+			if ((rand() % 2) && (int)loadData("windDir") == 2) {
+				dir = !dir;
+				HAL_Delay(delayBetweenWind);
+			}
 			if (!saveData("curNumRotation", i)) break;
 		}
 		LCD_UpdatePb(&pb, tnr, BLUE);
 
 	}
+	
 	
 	void startWinding(windingTask* task) {
 		/*
@@ -529,6 +538,7 @@
 		LCD_DrawString(10,50,buffer1,DEFAULT_FONTSIZE);
 		LCD_DrawString(10,70,buffer2,DEFAULT_FONTSIZE);
 		LCD_DrawString(10,90,buffer3,DEFAULT_FONTSIZE); 
+
 		LCD_DrawRectButton(70,150,100,50,"Start",BLACK);
 		
 		strType_XPT2046_Coordinate coords;

@@ -628,9 +628,9 @@ int LCD_UpdatePb(progressBar* pb, int curProgress, uint16_t usColor) {
 
 	if (frac == 100) {
 		LCD_Clear(0,0,240,100,BACKGROUND);
-		LCD_DrawString(50,50,"Winding watch...", 16);
-		LCD_DrawString(pb->left+50, pb->top+100, "Rotation completed!", 16);
-		HAL_Delay(1000);
+		LCD_DrawString(60,50,"Winding watch...", DEFAULT_FONTSIZE);
+		LCD_DrawString(pb->left+30, pb->top+100, "Winding completed!", DEFAULT_FONTSIZE);
+		HAL_Delay(3000);
 		return 1;
 	}
 	return 0;
