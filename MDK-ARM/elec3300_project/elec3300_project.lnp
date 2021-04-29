@@ -1,9 +1,10 @@
 --cpu Cortex-M3
 "elec3300_project\startup_stm32f103xe.o"
-"elec3300_project\lcd.o"
 "elec3300_project\main.o"
 "elec3300_project\stm32f1xx_it.o"
 "elec3300_project\stm32f1xx_hal_msp.o"
+"elec3300_project\lcdtp.o"
+"elec3300_project\xpt2046.o"
 "elec3300_project\system_stm32f1xx.o"
 "elec3300_project\stm32f1xx_hal_gpio_ex.o"
 "elec3300_project\stm32f1xx_ll_fsmc.o"

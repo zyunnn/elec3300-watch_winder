@@ -388,17 +388,20 @@ void LCD_DrawChar ( uint16_t usC, uint16_t usP, const char cChar )
 
 
 
-void LCD_DrawString ( uint16_t usC, uint16_t usP, const char * pStr )
+void LCD_DrawString ( uint16_t usC, uint16_t usP, const char * pStr, int fontSize )
 {
+	int charWidth = (fontSize/2 > 7)?fontSize/2:7;
 	while ( * pStr != '\0' )
 	{
-		if ( ( usC - LCD_DispWindow_Start_COLUMN + WIDTH_EN_CHAR ) > LCD_DispWindow_COLUMN )
+//		if ( ( usC - LCD_DispWindow_Start_COLUMN + WIDTH_EN_CHAR ) > LCD_DispWindow_COLUMN )
+		if ( ( usC - LCD_DispWindow_Start_COLUMN + charWidth ) > LCD_DispWindow_COLUMN )
 		{
 			usC = LCD_DispWindow_Start_COLUMN;
 			usP += HEIGHT_EN_CHAR;
 		}
 		
-		if ( ( usP - LCD_DispWindow_Start_PAGE + HEIGHT_EN_CHAR ) > LCD_DispWindow_PAGE )
+//		if ( ( usP - LCD_DispWindow_Start_PAGE + HEIGHT_EN_CHAR ) > LCD_DispWindow_PAGE )
+if ( ( usP - LCD_DispWindow_Start_PAGE + fontSize ) > LCD_DispWindow_PAGE )
 		{
 			usC = LCD_DispWindow_Start_COLUMN;
 			usP = LCD_DispWindow_Start_PAGE;
@@ -408,7 +411,8 @@ void LCD_DrawString ( uint16_t usC, uint16_t usP, const char * pStr )
 		
 		pStr ++;
 		
-		usC += WIDTH_EN_CHAR;
+//		usC += WIDTH_EN_CHAR;
+		usC += charWidth;
 		
 	}
 	
@@ -468,17 +472,20 @@ void LCD_DrawCross ( uint16_t usX, uint16_t usY )
 }
 
 
-void LCD_DrawString_Color ( uint16_t usC, uint16_t usP, const char * pStr, uint16_t usColor_Background, uint16_t usColor_Foreground )
+void LCD_DrawString_Color ( uint16_t usC, uint16_t usP, const char * pStr, uint16_t usColor_Background, uint16_t usColor_Foreground, int fontSize )
 {
+	int charWidth = (fontSize/2 > 7)?fontSize/2:7;
 	while ( * pStr != '\0' )
 	{
-		if ( ( usC - LCD_DispWindow_Start_COLUMN + WIDTH_EN_CHAR ) > LCD_DispWindow_COLUMN )
+		if ( ( usC - LCD_DispWindow_Start_COLUMN + charWidth ) > LCD_DispWindow_COLUMN )
+//		if ( ( usC - LCD_DispWindow_Start_COLUMN + WIDTH_EN_CHAR ) > LCD_DispWindow_COLUMN )
 		{
 			usC = LCD_DispWindow_Start_COLUMN;
 			usP += HEIGHT_EN_CHAR;
 		}
 		
-		if ( ( usP - LCD_DispWindow_Start_PAGE + HEIGHT_EN_CHAR ) > LCD_DispWindow_PAGE )
+		if ( ( usP - LCD_DispWindow_Start_PAGE + fontSize ) > LCD_DispWindow_PAGE )		
+//		if ( ( usP - LCD_DispWindow_Start_PAGE + HEIGHT_EN_CHAR ) > LCD_DispWindow_PAGE )
 		{
 			usC = LCD_DispWindow_Start_COLUMN;
 			usP = LCD_DispWindow_Start_PAGE;
@@ -488,7 +495,8 @@ void LCD_DrawString_Color ( uint16_t usC, uint16_t usP, const char * pStr, uint1
 		
 		pStr ++;
 		
-		usC += WIDTH_EN_CHAR;
+		usC += charWidth;		
+//		usC += WIDTH_EN_CHAR;
 		
 	}
 	
@@ -596,10 +604,33 @@ void LCD_GramScan ( uint8_t ucOption )
 }
 
 
-void LCD_DrawRectButton(int startC, int startP, int width, int height, char* label) {
-	LCD_DrawLine(startC, startP, startC+width, startP, BLACK);
-	LCD_DrawLine(startC, startP, startC, startP+height, BLACK);
-	LCD_DrawLine(startC+width, startP, startC+width, startP+height, BLACK);
-	LCD_DrawLine(startC, startP+height, startC+width, startP+height, BLACK);
-	LCD_DrawString(startC+10, startP+(int)((height-10)/2),label);
+void LCD_DrawRectButton(int startC, int startP, int width, int height, char* label, uint16_t usColor) {
+	LCD_DrawLine(startC, startP, startC+width, startP, usColor);
+	LCD_DrawLine(startC, startP, startC, startP+height, usColor);
+	LCD_DrawLine(startC+width, startP, startC+width, startP+height, usColor);
+	LCD_DrawLine(startC, startP+height, startC+width, startP+height, usColor);
+	LCD_DrawString(startC+10, startP+(int)((height-10)/2),label, 16);
+}
+
+
+
+int LCD_UpdatePb(progressBar* pb, int curProgress, uint16_t usColor) {
+	char buffer[50];
+	int step = (pb->width-4)/pb->range;
+	int frac = curProgress*100/pb->range;
+	LCD_Clear(pb->left+2, pb->top+2, curProgress*step, pb->height-3, usColor);
+  sprintf(buffer, "%d%%", frac);
+	LCD_Clear(pb->left, pb->top+100, 240, 50, BACKGROUND);
+	if ((curProgress*step)-30 < 0)
+		LCD_DrawString_Color(pb->left+2, pb->top+2, buffer, BLUE, WHITE, 8);
+	else
+		LCD_DrawString_Color(pb->left+2+(curProgress*step)-30, pb->top+2, buffer, BLUE, WHITE, 8);
+
+	if (frac == 100) {
+		LCD_Clear(0,0,240,100,BACKGROUND);
+		LCD_DrawString(50,50,"Winding watch...", 16);
+		LCD_DrawString(pb->left+50, pb->top+100, "Rotation completed!", 16);
+		return 1;
+	}
+	return 0;
 }
