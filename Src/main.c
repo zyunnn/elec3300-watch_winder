@@ -51,6 +51,7 @@
 SRAM_HandleTypeDef hsram1;
 
 /* USER CODE BEGIN PV */
+int windDir = 0; // 0=clockwise, 1=anticlockwise, 2=bi-directional
 int targetNumRotation, curNumRotation;
 float targetHour = 0;
 float curHour;
@@ -95,6 +96,9 @@ static void MX_NVIC_Init(void);
 		} else if (!strcmp(dataName, "curHour")) {
 			curHour = value;
 			return true;
+		} else if (!strcmp(dataName, "windDir")) {
+			windDir = value;
+			return true;
 		}
 		return false;
 	}
@@ -108,6 +112,8 @@ static void MX_NVIC_Init(void);
 			return targetHour;
 		} else if (!strcmp(dataName, "curHour")) {
 			return curHour;
+		} else if (!strcmp(dataName, "windDir")) {
+			return windDir;
 		}
 		return -1;
 	}
@@ -288,16 +294,10 @@ static void MX_NVIC_Init(void);
 			incrementInterruptTimer(1);
 			switch (mode) {
 				case 0:
-					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
-					HAL_Delay(t);
-
-					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
-					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
 					HAL_Delay(t);
 
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
@@ -307,21 +307,21 @@ static void MX_NVIC_Init(void);
 					HAL_Delay(t);
 
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_Delay(t);
+
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
 					HAL_Delay(t);
 					break;
 				case 1:
-					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
-					HAL_Delay(t);
-
-					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_SET);
 					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
 					HAL_Delay(t);
 
@@ -331,10 +331,16 @@ static void MX_NVIC_Init(void);
 					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
 					HAL_Delay(t);
 
-					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_SET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_Delay(t);
+
+					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_RESET);
 					HAL_GPIO_WritePin(GPIOE, GPIO_PIN_6, GPIO_PIN_RESET);
-					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_RESET);
+					HAL_GPIO_WritePin(GPIOC, GPIO_PIN_4, GPIO_PIN_SET);
 					HAL_Delay(t);
 			}
 		}
@@ -347,9 +353,9 @@ static void MX_NVIC_Init(void);
 		Rotate 
 		*/
 		LCD_Clear(50,50,200,200,BACKGROUND);
-		LCD_DrawString(50,50,"Winding watch...",DEFAULT_FONTSIZE);
-
-		int dir = 0;
+		LCD_DrawString(50,50,"Rotating...");
+		
+		int dir = (int)loadData("windDir") == 2? 0: (int)loadData("windDir");
 		int tnr = (int)loadData("targetNumRotation");
 		tnr = 20;  	 // check progressBar
 		
@@ -369,10 +375,11 @@ static void MX_NVIC_Init(void);
 			}
 			rotateFullCycle(dir);
 			LCD_UpdatePb(&pb, i+1,BLUE);
+			if ((int)loadData("windDir") == 2) dir = !dir;
 			HAL_Delay(1000);
-			dir = !dir;
 			if (!saveData("curNumRotation", i)) break;
 		}
+
 	}
 	
 	void startWinding(void) {
