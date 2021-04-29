@@ -49,6 +49,8 @@
 #define      YELLOW                 0xFFE0	 
 #define      BACKGROUND		          WHITE  
 
+#define      DEFAULT_FONTSIZE 	    16
+
 
 #define      CMD_Set_COLUMN		 0x2A	     
 #define      CMD_Set_PAGE		   0x2B	     
@@ -81,7 +83,7 @@ void 						LCD_DrawCircle		( uint16_t usC, uint16_t usP, uint16_t R, uint16_t us
 
 void LCD_DrawCross ( uint16_t usX, uint16_t usY );
 void LCD_DrawChar_Color ( uint16_t usC, uint16_t usP, const char cChar, uint16_t usColor_Background, uint16_t usColor_Foreground );
-void LCD_DrawChar_Color ( uint16_t usC, uint16_t usP, const char cChar, uint16_t usColor_Background, uint16_t usColor_Foreground );
+void LCD_DrawString_Color ( uint16_t usC, uint16_t usP, const char * pStr, uint16_t usColor_Background, uint16_t usColor_Foreground, int fontSize );
 void LCD_GramScan ( uint8_t ucOption );
 void LCD_DrawRectButton( int startC, int startP, int width, int height, char* label, uint16_t usColor );
 int LCD_UpdatePb( progressBar* pb, int curProgress, uint16_t usColor ); 

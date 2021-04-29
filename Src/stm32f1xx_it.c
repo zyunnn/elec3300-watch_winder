@@ -223,9 +223,9 @@ void EXTI9_5_IRQHandler(void)
 		interruptFlag = !interruptFlag;
 		interruptTimer = 0;
 		if (interruptFlag) {
-			LCD_DrawString(50,100,"Stopping winder",16);
+			LCD_DrawString_Color(60,100,"Stopping winder", BACKGROUND, RED, DEFAULT_FONTSIZE);
 		} else {
-			LCD_DrawString(50,100,"Resume winder  ",16);
+			LCD_DrawString_Color(60,100," Resume winder  ", BACKGROUND, 0x2E81, DEFAULT_FONTSIZE);
 		}
 	}
   /* USER CODE END EXTI9_5_IRQn 0 */
