@@ -390,11 +390,6 @@
           <GroupName>Application/User</GroupName>
           <Files>
             <File>
-              <FileName>lcd.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\lcd.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Src/main.c</FilePath>
@@ -409,6 +404,16 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32f1xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>lcdtp.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\lcdtp.c</FilePath>
+            </File>
+            <File>
+              <FileName>xpt2046.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\xpt2046.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -420,9 +425,6 @@
               <FilePath>../Src/system_stm32f1xx.c</FilePath>
             </File>
           </Files>
-        </Group>
-        <Group>
-          <GroupName>::CMSIS</GroupName>
         </Group>
         <Group>
           <GroupName>Drivers/STM32F1xx_HAL_Driver</GroupName>
@@ -1266,6 +1268,9 @@
               </FileOption>
             </File>
           </Files>
+        </Group>
+        <Group>
+          <GroupName>::CMSIS</GroupName>
         </Group>
       </Groups>
     </Target>

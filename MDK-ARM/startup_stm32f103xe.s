@@ -168,7 +168,6 @@ Reset_Handler   PROC
                 LDR     R0, =__main
                 BX      R0
                 ENDP
-                
 ; Dummy Exception Handlers (infinite loops which can be modified)
 
 NMI_Handler     PROC

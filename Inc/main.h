@@ -43,6 +43,7 @@ typedef struct
 	float targetHour, curHour;
 	int windDir;
 } windingTask;
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/

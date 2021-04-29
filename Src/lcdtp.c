@@ -630,6 +630,7 @@ int LCD_UpdatePb(progressBar* pb, int curProgress, uint16_t usColor) {
 		LCD_Clear(0,0,240,100,BACKGROUND);
 		LCD_DrawString(50,50,"Winding watch...", 16);
 		LCD_DrawString(pb->left+50, pb->top+100, "Rotation completed!", 16);
+		HAL_Delay(1000);
 		return 1;
 	}
 	return 0;
