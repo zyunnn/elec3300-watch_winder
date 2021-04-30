@@ -616,17 +616,18 @@ void LCD_DrawRectButton(int startC, int startP, int width, int height, char* lab
 
 int LCD_UpdatePb(progressBar* pb, int curProgress, uint16_t usColor) {
 	char buffer[50];
-	int step = (pb->width-4)/pb->range;
-	int frac = curProgress*100/pb->range;
-	LCD_Clear(pb->left+2, pb->top+2, curProgress*step, pb->height-3, usColor);
-  sprintf(buffer, "%d%%", frac);
-	LCD_Clear(pb->left, pb->top+100, 240, 50, BACKGROUND);
-	if ((curProgress*step)-30 < 0)
-		LCD_DrawString_Color(pb->left+2, pb->top+2, buffer, BLUE, WHITE, 8);
+	int step = (int)(curProgress*(pb->width-4)/pb->range);
+	int start;
+	LCD_Clear(pb->left+2, pb->top+2, step, pb->height-3, usColor);
+  sprintf(buffer, "%d%%", (int)(curProgress*100/pb->range));
+	if (step < 30)
+		start = pb->left+2;
 	else
-		LCD_DrawString_Color(pb->left+2+(curProgress*step)-30, pb->top+2, buffer, BLUE, WHITE, 8);
+		start = pb->left+2+step-30;
+	LCD_DrawString_Color(start, pb->top+2, buffer, BLUE, WHITE, 8);
+	LCD_Clear(pb->left, pb->top+100, 240, 50, BACKGROUND);
 
-	if (frac == 100) {
+	if (curProgress == pb->range) {
 		LCD_Clear(0,0,240,100,BACKGROUND);
 		LCD_DrawString(60,50,"Winding watch...", DEFAULT_FONTSIZE);
 		LCD_DrawString(pb->left+30, pb->top+100, "Winding completed!", DEFAULT_FONTSIZE);

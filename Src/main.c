@@ -66,8 +66,8 @@
 	unsigned int interruptTimer = refractoryPeriod;
 	strType_XPT2046_TouchPara touchPara = {0.085958, -0.001073, -4.979353, -0.001750, 0.065168, -13.318824};
 
-	char *modelName[] = {"CARTIER Santos", "CHOPARD LUC 1937", "HUBLOT 1915", "PIAGET Altiplano", "ROLEX Cellini"};
-	int modelTurn[5] = {700, 800, 650, 1340, 650};
+	char *modelName[] = {"AP Royal Oak 2012", "CHOPARD LUC 1937", "HUBLOT 1915", "PIAGET Altiplano", "OMEGA Seamaster"};
+	int modelTurn[5] = {800, 800, 650, 1340, 650};
 	int modelWindDir[5] = {0,0,2,1,2};
 
 /* USER CODE END PV */
@@ -242,10 +242,17 @@
 				if(coords.y >= 30 && coords.y <= 200) {
 					int modelNo = (int)((320-coords.x-startP)/40);	
 					LCD_Clear(10,50,200,270,BACKGROUND);
+					eraseAllData();
+					saveData("targetNumRotation",modelTurn[modelNo]);
+					saveData("targetHour",7*modelTurn[modelNo]/3600.0);
+					saveData("curNumRotation",0);
+					saveData("curHour", 0); 
+					saveData("windDir",modelWindDir[modelNo]);
 					LCD_DrawString(50,50,"Model selected",DEFAULT_FONTSIZE);
 					LCD_DrawString(30,100,modelName[modelNo],DEFAULT_FONTSIZE);
 					task->targetNumRotation = modelTurn[modelNo];
 					task->windDir = modelWindDir[modelNo];
+					task->targetHour = 7*modelTurn[modelNo]/3600.0;
 					HAL_Delay(1000);
 					return;
 				}
@@ -395,10 +402,6 @@
 		/*
 		Input and save target rotation and winding hour of new task
 		*/
-		LCD_Clear (0, 0, 240, 320, BACKGROUND);
-		eraseAllData();		
-		LCD_DrawString(20,50,"Removing previous task...", DEFAULT_FONTSIZE);
-		HAL_Delay(1000);
 		
 		LCD_Clear (0, 0, 240, 320, BACKGROUND);
 		LCD_DrawString (20, 50, "Starting new task...", DEFAULT_FONTSIZE);
@@ -488,12 +491,12 @@
 		/*
 		Rotate 
 		*/
-		LCD_Clear(50,50,200,200,BACKGROUND);
+		LCD_Clear(0,50,200,200,BACKGROUND);
 		LCD_DrawString(60,50,"Winding watch...", DEFAULT_FONTSIZE);
 		
 		int dir = (int)loadData("windDir") == 2? 0: (int)loadData("windDir");
 		int tnr = task->targetNumRotation;
-		int delayBetweenWind = (int)(double)loadData("targetHour")*60*60*1000/tnr - 6;
+		int delayBetweenWind = (int)(double)loadData("targetHour")*60*60*1000.0/tnr - 6;
 		delayBetweenWind = 1000;
 		//tnr = 20;  	 // check progressBar
 		
@@ -518,7 +521,7 @@
 				dir = !dir;
 				HAL_Delay(delayBetweenWind);
 			}
-			if (!saveData("curNumRotation", i)) break;
+			if (saveData("curNumRotation", i)) break;
 		}
 		LCD_UpdatePb(&pb, tnr, BLUE);
 
@@ -547,6 +550,7 @@
 				XPT2046_Get_TouchedPoint(&coords, &touchPara);
 				if (coords.y >= 50 && coords.y <= 200 && coords.x >= 130 && coords.x <= 170) {		// 320-150, 320-190
 					startRotate(task);
+					eraseAllData();
 					break; 		// finish rotation
 				}
 			}
@@ -601,12 +605,12 @@ int main(void)
 	windingTask prevTask, curTask;
 	
 	// uncomment this block to set initial Task data
-	eraseAllData();
+	/*eraseAllData();
 	saveData("targetNumRotation",500);
 	saveData("targetHour",10.0);
 	saveData("curNumRotation",100);
 	saveData("curHour", 2.0); 
-	saveData("windDir",1);
+	saveData("windDir",1);*/
 	bool prevFlag = checkOngoing(&prevTask);
 	bool setupReady = false;
 
@@ -637,6 +641,10 @@ int main(void)
 					}
 					// start a new task
 					else if (coords.y >= 130 && coords.y <= 200 && coords.x <= 170 && coords.x >= 120){		// 320-150, 320-200
+						LCD_Clear (0, 0, 240, 320, BACKGROUND);
+						eraseAllData();		
+						LCD_DrawString(20,50,"Removing previous task...", DEFAULT_FONTSIZE);
+						HAL_Delay(1000);
 						setupReady = startNewTask(&curTask);
 						break;
 					}
