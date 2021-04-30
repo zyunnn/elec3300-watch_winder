@@ -29,3 +29,4 @@ elec3300_project\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 elec3300_project\main.o: ../Src/lcdtp.h
 elec3300_project\main.o: ../Src/xpt2046.h
 elec3300_project\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+elec3300_project\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\time.h

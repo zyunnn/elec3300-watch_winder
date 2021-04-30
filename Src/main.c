@@ -42,7 +42,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 	#define DEFAULT_FONTSIZE 		16
-	#define BASE_ADDR 					0x08017C00
+	#define	ADDR0								0x08017400
+	#define	ADDR1								0x08017800
+	#define	ADDR2								0x08016000
+	#define	ADDR3								0x08016800
+	#define ADDR4			 					0x08017C00
 	#define DEFAULT_ROTATION		700
 	#define MIN_ROTATION				0
 	#define MAX_ROTATION				1000
@@ -84,89 +88,19 @@
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-
-	uint32_t saveData(char dataName[], double value) {
-		/*
-		Write new Task data to flash memory
-		*/
-		static FLASH_EraseInitTypeDef EraseInitStruct;
-		uint32_t pageError = 0;
-		uint64_t targetAddr;
-		
-		if (!strcmp(dataName, "targetNumRotation")) {
-			targetAddr = BASE_ADDR+0;
-		} else if (!strcmp(dataName, "curNumRotation")) {
-			targetAddr = BASE_ADDR+8;
-		} else if (!strcmp(dataName, "targetHour")) {
-			targetAddr = BASE_ADDR+16;
-		} else if (!strcmp(dataName, "curHour")) {
-			targetAddr = BASE_ADDR+24;
-		} else if (!strcmp(dataName, "windDir")) {
-			targetAddr = BASE_ADDR+32;
-		}
-
-		HAL_FLASH_Unlock();
-		
-		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, targetAddr, (uint16_t)value) != HAL_OK) {
-			return HAL_FLASH_GetError();
-		};
-		HAL_FLASH_Lock();
-		return 0;
-	}
-
-
-	uint16_t loadData(char dataName[]) {
-		/*
-		Read intial Task data from flash memory
-		*/
-		uint64_t* dataAddr;
-		if (!strcmp(dataName, "targetNumRotation")) {
-			dataAddr = (uint64_t*) BASE_ADDR;
-		} else if (!strcmp(dataName, "curNumRotation")) {
-			dataAddr = (uint64_t*) (BASE_ADDR+8);
-		} else if (!strcmp(dataName, "targetHour")) {
-			dataAddr = (uint64_t*) (BASE_ADDR+16);
-		} else if (!strcmp(dataName, "curHour")) {
-			dataAddr = (uint64_t*) (BASE_ADDR+24);
-		} else if (!strcmp(dataName, "windDir")) {
-			dataAddr = (uint64_t*) (BASE_ADDR+32);
-		}
-		return *dataAddr;
-	}
-
-	bool checkOngoing(windingTask* task) {
-		/*
-		Check and load previous Task data in flash memory
-		- we do sanity check here determine whether flash memory data is valid
-		*/
-		uint64_t* targetAddr = (uint64_t*) BASE_ADDR;
-		task->targetNumRotation = (int)loadData("targetNumRotation");
-		task->curNumRotation = (int)loadData("curNumRotation");
-		task->targetHour = (float)loadData("targetHour");
-		task->curHour = (float)loadData("curHour");
-		task->windDir = (int)loadData("windDir");
-
-		if (task->targetNumRotation > task->curNumRotation && task->targetHour > task->curHour && \
-			  task->targetNumRotation <= MAX_ROTATION && task->targetHour <= MAX_HOUR && \
-		    task->curNumRotation >= MIN_ROTATION && task->curHour >= 0 && \
-				task->windDir >= 0 && task->windDir <= 2)
-		return true;
-		return false;
-	}
-	
 	uint32_t eraseAllData(void) {
 		/*
 		Erase all data of previous task in flash memory
 		*/
 		static FLASH_EraseInitTypeDef EraseInitStruct;
-		uint64_t startAddr = BASE_ADDR;
+		uint64_t startAddr = ADDR2;
 		uint32_t pageError = 0;
 		
 		HAL_FLASH_Unlock();
 
 		EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
 		EraseInitStruct.PageAddress = startAddr;
-		EraseInitStruct.NbPages = 1;
+		EraseInitStruct.NbPages = 7;
 
 		if (HAL_FLASHEx_Erase(&EraseInitStruct, &pageError) != HAL_OK) {
 			return HAL_FLASH_GetError();		// error during page erase
@@ -174,6 +108,84 @@
 		
 		HAL_FLASH_Lock();
 		return 0;
+	}
+	
+
+	uint16_t loadData(char dataName[]) {
+		/*
+		Read intial Task data from flash memory
+		*/
+		uint64_t* dataAddr;
+		if (!strcmp(dataName, "targetNumRotation")) {
+			dataAddr = (uint64_t*) ADDR0;
+		} else if (!strcmp(dataName, "curNumRotation")) {
+			dataAddr = (uint64_t*) ADDR1;
+		} else if (!strcmp(dataName, "targetHour")) {
+			dataAddr = (uint64_t*) ADDR2;
+		} else if (!strcmp(dataName, "curHour")) {
+			dataAddr = (uint64_t*) ADDR3;
+		} else if (!strcmp(dataName, "windDir")) {
+			dataAddr = (uint64_t*) ADDR4;
+		}
+		return *dataAddr;
+	}
+	
+	
+	uint32_t saveData(char dataName[], double value) {
+		/*
+		Write new Task data to flash memory
+		*/
+		uint64_t targetAddr;
+		
+		if (!strcmp(dataName, "targetNumRotation")) {
+			targetAddr = ADDR0;
+		} else if (!strcmp(dataName, "curNumRotation")) {
+			targetAddr = ADDR1;
+		} else if (!strcmp(dataName, "targetHour")) {
+			targetAddr = ADDR2;
+		} else if (!strcmp(dataName, "curHour")) {
+			targetAddr = ADDR3;
+		} else if (!strcmp(dataName, "windDir")) {
+			targetAddr = ADDR4;
+		}
+		
+		HAL_FLASH_Unlock();
+		
+		if (!strcmp(dataName, "curNumRotation")) {
+			int tnr = (int)loadData("targetNumRotation");
+			int thr = (int)loadData("targetHour");
+			float chr = (float)loadData("curHour");
+			eraseAllData();
+			saveData("targetNumRotation",tnr);
+			saveData("targetHour",thr);
+			saveData("curHour",chr);
+		}
+	
+		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, targetAddr, (uint16_t)value) != HAL_OK) 
+				return HAL_FLASH_GetError();
+
+		HAL_FLASH_Lock();
+		return 0;
+	}
+
+
+	bool checkOngoing(windingTask* task) {
+		/*
+		Check and load previous Task data in flash memory
+		- we do sanity check here determine whether flash memory data is valid
+		*/
+		task->targetNumRotation = (int)loadData("targetNumRotation");
+		task->curNumRotation = (int)loadData("curNumRotation");
+		task->targetHour = (float)loadData("targetHour")/10;
+		task->curHour = (float)loadData("curHour");
+		task->windDir = (int)loadData("windDir");
+
+		if (task->targetNumRotation > task->curNumRotation && task->targetHour > task->curHour && \
+			  task->targetNumRotation <= MAX_ROTATION && task->targetHour <= MAX_HOUR && 
+		    task->curNumRotation >= MIN_ROTATION && task->curHour >= 0 && \
+				task->windDir >= 0 && task->windDir <= 2)
+		return true;
+		return false;
 	}
 	
 	
@@ -211,7 +223,6 @@
 				else if ((int)coords.y >= 50 && (int)coords.y <= 200 && (int)coords.x >= 80 && (int)coords.x <= 120) {	// 320-200, 320-240
 					return 1;
 			}
-				// invalid input, prompt user to choose input again
 		}
 	}
 }
@@ -235,17 +246,34 @@
 				if(coords.y >= 30 && coords.y <= 200) {
 					int modelNo = (int)((320-coords.x-startP)/40);	
 					LCD_Clear(10,50,200,270,BACKGROUND);
-					eraseAllData();
-					saveData("targetNumRotation",modelTurn[modelNo]);
-					saveData("targetHour",7*modelTurn[modelNo]/3600.0);
-					saveData("curNumRotation",0);
-					saveData("curHour", 0); 
-					saveData("windDir",modelWindDir[modelNo]);
-					LCD_DrawString(50,50,"Model selected",DEFAULT_FONTSIZE);
-					LCD_DrawString(30,100,modelName[modelNo],DEFAULT_FONTSIZE);
 					task->targetNumRotation = modelTurn[modelNo];
 					task->windDir = modelWindDir[modelNo];
 					task->targetHour = 7*modelTurn[modelNo]/3600.0;
+					
+					eraseAllData();
+					saveData("targetNumRotation",modelTurn[modelNo]);
+					saveData("targetHour",(int)(task->targetHour*10));
+					saveData("curNumRotation",0);
+					saveData("curHour", 0.0); 
+					saveData("windDir",modelWindDir[modelNo]);
+					LCD_DrawString(50,50,"Model selected",DEFAULT_FONTSIZE);
+					LCD_DrawString(30,100,modelName[modelNo],DEFAULT_FONTSIZE);
+					HAL_Delay(1000);
+					
+					int tnr = (int)loadData("targetNumRotation");
+					int cnr = (int)loadData("curNumRotation");
+					int dir = (int)loadData("windDir");
+					float thr = (float)loadData("targetHour")/10;
+					float chr = (float)loadData("curHour");
+					
+					char buffer[50];
+					LCD_Clear(0,0,240,320,BACKGROUND);
+					sprintf(buffer, "rotation: %d, %d", tnr, cnr);
+					LCD_DrawString(10,50,buffer,DEFAULT_FONTSIZE);
+					sprintf(buffer, "hour: %0.1f, %0.1f", thr, chr);
+					LCD_DrawString(10,70,buffer,DEFAULT_FONTSIZE);
+					sprintf(buffer, "direction: %d", dir);
+					LCD_DrawString(10,90,buffer,DEFAULT_FONTSIZE);
 					HAL_Delay(1000);
 					return;
 				}
@@ -327,7 +355,7 @@
 				// finish input, move to next operation
 				else if (coords.y >= 180 && coords.y <= 250 && coords.x > 0 && coords.x <= 50){			// 320-180, 320-320
 					task->targetHour = tmpHour;
-					saveData("targetHour", tmpHour);
+					saveData("targetHour", (int)(tmpHour*10));
 					return;
 				}	
 				// invalid input
@@ -339,7 +367,6 @@
 	}
 	
 	void inputDirection(windingTask* task) {
-		char buffer[50];
 		int windDir;
 		LCD_DrawString(30,50,"Choose winding direction",DEFAULT_FONTSIZE);
 		for (int i = 0; i < 3; i++) {
@@ -474,9 +501,10 @@
 		LCD_Clear(0,50,200,200,BACKGROUND);
 		LCD_DrawString(60,50,"Winding watch...", DEFAULT_FONTSIZE);
 		
-		int dir = (int)loadData("windDir") == 2? 0: (int)loadData("windDir");
+		int dir = task->windDir == 2 ? 0:task->windDir;
 		int tnr = task->targetNumRotation;
-		int delayBetweenWind = (int)(double)loadData("targetHour")*60*60*1000.0/tnr - 6;
+		int cnr = (int)loadData("curNumRotation");		
+		int delayBetweenWind = (int)(float)loadData("targetHour")/10*60*60*1000.0/tnr - 6;
 		delayBetweenWind = 1000;
 		//tnr = 20;  	 // check progressBar
 		
@@ -514,13 +542,15 @@
 		*/
 		char buffer1[50], buffer2[50], buffer3[50];
 		sprintf(buffer1, "Turn: %d", task->targetNumRotation);
-		sprintf(buffer2, "Duration: %0.1f hour", task->targetHour);
+		sprintf(buffer2, "Duration: %0.1f hour", (float)loadData("targetHour")/10);
 		sprintf(buffer3, "Direction: %s", windDirName[task->windDir]);
 		
 		LCD_Clear(0,0,240,320,BACKGROUND);
 		LCD_DrawString(10,50,buffer1,DEFAULT_FONTSIZE);
 		LCD_DrawString(10,70,buffer2,DEFAULT_FONTSIZE);
-		LCD_DrawString(10,90,buffer3,DEFAULT_FONTSIZE); 
+		LCD_DrawString(10,90,buffer3,DEFAULT_FONTSIZE);
+		sprintf(buffer3, "CurDuration: %0.1f hour",task->curHour);
+		LCD_DrawString(10,110,buffer3,DEFAULT_FONTSIZE);
 
 		LCD_DrawRectButton(70,150,100,50,"Start",BLACK);
 		
@@ -585,12 +615,14 @@ int main(void)
 	windingTask prevTask, curTask;
 	
 	// uncomment this block to set initial Task data
-	/*eraseAllData();
+	/*
+	eraseAllData();
 	saveData("targetNumRotation",500);
-	saveData("targetHour",10.0);
+	saveData("targetHour",(int)(10.0*10));
 	saveData("curNumRotation",100);
 	saveData("curHour", 2.0); 
-	saveData("windDir",1);*/
+	saveData("windDir",1);
+	*/
 	bool prevFlag = checkOngoing(&prevTask);
 	bool setupReady = false;
 
