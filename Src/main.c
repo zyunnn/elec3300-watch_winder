@@ -47,7 +47,7 @@
 	#define MIN_ROTATION				0
 	#define MAX_ROTATION				1000
 	#define DEFAULT_HOUR				2.0
-	#define MIN_HOUR						0.0
+	//#define MIN_HOUR						0.0
 	#define MAX_HOUR						36.0
  
 /* USER CODE END PD */
@@ -148,7 +148,7 @@
 
 		if (task->targetNumRotation > task->curNumRotation && task->targetHour > task->curHour && \
 			  task->targetNumRotation <= MAX_ROTATION && task->targetHour <= MAX_HOUR && \
-		    task->curNumRotation >= MIN_ROTATION && task->curHour >= MIN_HOUR && \
+		    task->curNumRotation >= MIN_ROTATION && task->curHour >= 0 && \
 				task->windDir >= 0 && task->windDir <= 2)
 		return true;
 		return false;
@@ -212,13 +212,6 @@
 					return 1;
 			}
 				// invalid input, prompt user to choose input again
-				else {
-					LCD_Clear(50,50,200,50,BACKGROUND);
-					LCD_DrawString(40,50,"Please select valid input",8);
-					HAL_Delay(500);
-					LCD_Clear(0,50,240,50,BACKGROUND);
-					LCD_DrawString(50,50,"Select input type", DEFAULT_FONTSIZE);
-				}
 		}
 	}
 }
@@ -294,14 +287,9 @@
 					saveData("targetNumRotation", tmpRotation);
 					return;
 				}	
-				// invalid input
-				else {
-					LCD_DrawString(20,100,"Please select valid input.",DEFAULT_FONTSIZE);
-					HAL_Delay(700);
-				}
-					LCD_Clear (10, 100, 240, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE);
-					HAL_Delay(100);
+				LCD_Clear (10, 100, 240, 50, BACKGROUND);
+				LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE);
+				HAL_Delay(100);
 			}
 		}
 	}
@@ -315,23 +303,24 @@
 		
 		sprintf(buffer, "%0.1f hour", tmpHour);
 		LCD_Clear(0,0,240,320,BACKGROUND);
-		LCD_DrawString(50,50,"Input winding hour",DEFAULT_FONTSIZE);
+		LCD_DrawString(50,50,"Input winding hour", DEFAULT_FONTSIZE);
 		LCD_DrawRectButton(50,150,100,40,"- 1/2 hour", BLACK);
 		LCD_DrawRectButton(50,200,100,40,"+ 1/2 hour", BLACK);
-		LCD_DrawString(170,300,"Next >>",DEFAULT_FONTSIZE);
-		LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 
+		LCD_DrawString(170,300,"Next >>", DEFAULT_FONTSIZE);
+		LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE);
+		double MIN_HOUR = (double)loadData("targetNumRotation")*7/3600.0;
 		
 		strType_XPT2046_Coordinate coords;
 		while (true) {
 			if (isTouched()) {
 				XPT2046_Get_TouchedPoint(&coords, &touchPara);
 				// decrement by 1/2 hour
-				if (tmpHour > MIN_HOUR && coords.y >= 50 && coords.y <= 150 && coords.x >= 130 && coords.x <= 170) {		// 320-150, 320-190
+				if (tmpHour - 0.5 >= MIN_HOUR && coords.y >= 50 && coords.y <= 150 && coords.x >= 130 && coords.x <= 170) {		// 320-150, 320-190
 					tmpHour -= 0.5;
 					sprintf(buffer, "%0.1f	hour", tmpHour);
 				}
 				// increment by 1/2 hour
-				else if (tmpHour < MAX_HOUR && coords.y >= 50 && coords.y <= 150 && coords.x >= 80 && coords.x <= 120){		// 320-200, 320-240
+				else if (tmpHour + 0.5 <= MAX_HOUR && coords.y >= 50 && coords.y <= 150 && coords.x >= 80 && coords.x <= 120){		// 320-200, 320-240
 					tmpHour += 0.5;
 					sprintf(buffer, "%0.1f	hour", tmpHour);
 				}
@@ -342,13 +331,9 @@
 					return;
 				}	
 				// invalid input
-				else {
-					LCD_DrawString(20,100,"Please select valid input.",DEFAULT_FONTSIZE);
-					HAL_Delay(1000);
-				}
-					LCD_Clear (10, 100, 240, 50, BACKGROUND);
-					LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 
-					HAL_Delay(100);
+				LCD_Clear (10, 100, 240, 50, BACKGROUND);
+				LCD_DrawString(100,100,buffer,DEFAULT_FONTSIZE); 
+				HAL_Delay(100);
 			}
 		}
 	}
@@ -385,15 +370,10 @@
 					return;
 				}
 				// invalid input
-				else {
-					LCD_Clear (10, 70, 240, 50, BACKGROUND);
-					LCD_DrawString(20,80,"Please select valid input.",DEFAULT_FONTSIZE);
-					HAL_Delay(1000);
-				}
-					LCD_Clear (10, 70, 240, 50, BACKGROUND);
-					LCD_DrawString(50,80,windDirName[windDir],DEFAULT_FONTSIZE);
-					task->windDir = windDir;
-					HAL_Delay(100);
+				LCD_Clear (10, 70, 240, 50, BACKGROUND);
+				LCD_DrawString(50,80,windDirName[windDir],DEFAULT_FONTSIZE);
+				task->windDir = windDir;
+				HAL_Delay(100);
 			}
 	}
 }
