@@ -47,11 +47,11 @@
 	#define	ADDR2								0x08016000
 	#define	ADDR3								0x08016800
 	#define ADDR4			 					0x08017C00
+	#define NUM_PAGE						7
 	#define DEFAULT_ROTATION		700
 	#define MIN_ROTATION				0
 	#define MAX_ROTATION				1000
 	#define DEFAULT_HOUR				2.0
-	//#define MIN_HOUR						0.0
 	#define MAX_HOUR						36.0
  
 /* USER CODE END PD */
@@ -100,7 +100,7 @@
 
 		EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
 		EraseInitStruct.PageAddress = startAddr;
-		EraseInitStruct.NbPages = 7;
+		EraseInitStruct.NbPages = NUM_PAGE;
 
 		if (HAL_FLASHEx_Erase(&EraseInitStruct, &pageError) != HAL_OK) {
 			return HAL_FLASH_GetError();		// error during page erase
@@ -134,6 +134,8 @@
 	uint32_t saveData(char dataName[], double value) {
 		/*
 		Write new Task data to flash memory
+		
+		Notes: previous Task data (if exists) is not erased until new Task data is input
 		*/
 		uint64_t targetAddr;
 		
@@ -172,7 +174,8 @@
 	bool checkOngoing(windingTask* task) {
 		/*
 		Check and load previous Task data in flash memory
-		- we do sanity check here determine whether flash memory data is valid
+		
+		Notes: do sanity check here determine whether flash memory data is valid
 		*/
 		task->targetNumRotation = (int)loadData("targetNumRotation");
 		task->curNumRotation = (int)loadData("curNumRotation");
@@ -180,6 +183,7 @@
 		task->curHour = (float)loadData("curHour");
 		task->windDir = (int)loadData("windDir");
 
+		// Check if all data are within valid range
 		if (task->targetNumRotation > task->curNumRotation && task->targetHour > task->curHour && \
 			  task->targetNumRotation <= MAX_ROTATION && task->targetHour <= MAX_HOUR && 
 		    task->curNumRotation >= MIN_ROTATION && task->curHour >= 0 && \
@@ -190,6 +194,9 @@
 	
 	
 	void incrementInterruptTimer (int step) {
+		/* 
+		Helper function for interrupt
+		*/
 		interruptTimer = interruptTimer == refractoryPeriod? refractoryPeriod: interruptTimer + step;
 	}
 	
@@ -250,6 +257,7 @@
 					task->windDir = modelWindDir[modelNo];
 					task->targetHour = 7*modelTurn[modelNo]/3600.0;
 					
+					// save new Task data to memory
 					eraseAllData();
 					saveData("targetNumRotation",modelTurn[modelNo]);
 					saveData("targetHour",(int)(task->targetHour*10));
@@ -260,12 +268,14 @@
 					LCD_DrawString(30,100,modelName[modelNo],DEFAULT_FONTSIZE);
 					HAL_Delay(1000);
 					
+					// configure new Task locally
 					int tnr = (int)loadData("targetNumRotation");
 					int cnr = (int)loadData("curNumRotation");
 					int dir = (int)loadData("windDir");
 					float thr = (float)loadData("targetHour")/10;
 					float chr = (float)loadData("curHour");
 					
+					// display winding details of predefined model
 					char buffer[50];
 					LCD_Clear(0,0,240,320,BACKGROUND);
 					sprintf(buffer, "rotation: %d, %d", tnr, cnr);
@@ -367,6 +377,9 @@
 	}
 	
 	void inputDirection(windingTask* task) {
+		/*
+		Manually input winding direction
+		*/
 		int windDir;
 		LCD_DrawString(30,50,"Choose winding direction",DEFAULT_FONTSIZE);
 		for (int i = 0; i < 3; i++) {
@@ -409,7 +422,6 @@
 		/*
 		Input and save target rotation and winding hour of new task
 		*/
-		
 		LCD_Clear (0, 0, 240, 320, BACKGROUND);
 		LCD_DrawString (20, 50, "Starting new task...", DEFAULT_FONTSIZE);
 		HAL_Delay(1000);
@@ -435,6 +447,9 @@
 	
 	
 	void rotateFullCycle(int mode) {
+		/*
+		Start step motor and rotate full cycle with different rotation direction
+		*/
 		int t = 2;
 		for (int i = 0; i < 512; i++){
 			incrementInterruptTimer(1);
@@ -506,8 +521,8 @@
 		int cnr = (int)loadData("curNumRotation");		
 		int delayBetweenWind = (int)(float)loadData("targetHour")/10*60*60*1000.0/tnr - 6;
 		delayBetweenWind = 1000;
-		//tnr = 20;  	 // check progressBar
 		
+		// configure progress bar
 		progressBar pb;
 		pb.range = tnr;
 		pb.left = 18;
@@ -516,6 +531,7 @@
 		pb.height = 20;
 		LCD_DrawRectButton(pb.left,pb.top,pb.width,pb.height,"",BLACK);
 		
+		// update flash memory and progress bar after each rotation
 		for (int i = 0; i < tnr; i++) {
 			LCD_Clear(50, 100, 200, 20, BACKGROUND);
 			while(interruptFlag) {
@@ -568,10 +584,6 @@
 	}
 
 	
-	void promptWatch(void) {
-		LCD_DrawString(50,50,"Place watch to start winding.",DEFAULT_FONTSIZE);
-	}
-	
 /* USER CODE END 0 */
 
 /**
@@ -613,17 +625,7 @@ int main(void)
 	LCD_INIT();
 	
 	windingTask prevTask, curTask;
-	
-	// uncomment this block to set initial Task data
-	/*
-	eraseAllData();
-	saveData("targetNumRotation",500);
-	saveData("targetHour",(int)(10.0*10));
-	saveData("curNumRotation",100);
-	saveData("curHour", 2.0); 
-	saveData("windDir",1);
-	*/
-	bool prevFlag = checkOngoing(&prevTask);
+	bool prevFlag = checkOngoing(&prevTask);		// check for previous task
 	bool setupReady = false;
 
   /* USER CODE END 2 */
@@ -641,6 +643,7 @@ int main(void)
 				if (isTouched()) {
 					strType_XPT2046_Coordinate coords;
 					XPT2046_Get_TouchedPoint(&coords, &touchPara);
+					
 					// continue prev task
 					if (coords.y >= 30 && coords.y <= 100 && coords.x <= 170 && coords.x >= 120) {		// 320-150,320-200
 						curTask.targetNumRotation = prevTask.targetNumRotation;
@@ -651,6 +654,7 @@ int main(void)
 						setupReady = true;
 						break;
 					}
+					
 					// start a new task
 					else if (coords.y >= 130 && coords.y <= 200 && coords.x <= 170 && coords.x >= 120){		// 320-150, 320-200
 						LCD_Clear (0, 0, 240, 320, BACKGROUND);

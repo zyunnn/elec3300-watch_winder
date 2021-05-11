@@ -390,18 +390,16 @@ void LCD_DrawChar ( uint16_t usC, uint16_t usP, const char cChar )
 
 void LCD_DrawString ( uint16_t usC, uint16_t usP, const char * pStr, int fontSize )
 {
-	int charWidth = (fontSize/2 > 7)?fontSize/2:7;
+	int charWidth = (fontSize/2 > 7)?fontSize/2:7;		// set min charWidth to ensure visibility
 	while ( * pStr != '\0' )
 	{
-//		if ( ( usC - LCD_DispWindow_Start_COLUMN + WIDTH_EN_CHAR ) > LCD_DispWindow_COLUMN )
 		if ( ( usC - LCD_DispWindow_Start_COLUMN + charWidth ) > LCD_DispWindow_COLUMN )
 		{
 			usC = LCD_DispWindow_Start_COLUMN;
 			usP += HEIGHT_EN_CHAR;
 		}
 		
-//		if ( ( usP - LCD_DispWindow_Start_PAGE + HEIGHT_EN_CHAR ) > LCD_DispWindow_PAGE )
-if ( ( usP - LCD_DispWindow_Start_PAGE + fontSize ) > LCD_DispWindow_PAGE )
+		if ( ( usP - LCD_DispWindow_Start_PAGE + fontSize ) > LCD_DispWindow_PAGE )
 		{
 			usC = LCD_DispWindow_Start_COLUMN;
 			usP = LCD_DispWindow_Start_PAGE;
@@ -410,8 +408,7 @@ if ( ( usP - LCD_DispWindow_Start_PAGE + fontSize ) > LCD_DispWindow_PAGE )
 		LCD_DrawChar ( usC, usP, * pStr );
 		
 		pStr ++;
-		
-//		usC += WIDTH_EN_CHAR;
+
 		usC += charWidth;
 		
 	}
@@ -474,18 +471,16 @@ void LCD_DrawCross ( uint16_t usX, uint16_t usY )
 
 void LCD_DrawString_Color ( uint16_t usC, uint16_t usP, const char * pStr, uint16_t usColor_Background, uint16_t usColor_Foreground, int fontSize )
 {
-	int charWidth = (fontSize/2 > 7)?fontSize/2:7;
+	int charWidth = (fontSize/2 > 7)?fontSize/2:7;		// set min charWidth to ensure visibility
 	while ( * pStr != '\0' )
 	{
 		if ( ( usC - LCD_DispWindow_Start_COLUMN + charWidth ) > LCD_DispWindow_COLUMN )
-//		if ( ( usC - LCD_DispWindow_Start_COLUMN + WIDTH_EN_CHAR ) > LCD_DispWindow_COLUMN )
 		{
 			usC = LCD_DispWindow_Start_COLUMN;
 			usP += HEIGHT_EN_CHAR;
 		}
 		
 		if ( ( usP - LCD_DispWindow_Start_PAGE + fontSize ) > LCD_DispWindow_PAGE )		
-//		if ( ( usP - LCD_DispWindow_Start_PAGE + HEIGHT_EN_CHAR ) > LCD_DispWindow_PAGE )
 		{
 			usC = LCD_DispWindow_Start_COLUMN;
 			usP = LCD_DispWindow_Start_PAGE;
@@ -496,7 +491,6 @@ void LCD_DrawString_Color ( uint16_t usC, uint16_t usP, const char * pStr, uint1
 		pStr ++;
 		
 		usC += charWidth;		
-//		usC += WIDTH_EN_CHAR;
 		
 	}
 	
@@ -605,6 +599,9 @@ void LCD_GramScan ( uint8_t ucOption )
 
 
 void LCD_DrawRectButton(int startC, int startP, int width, int height, char* label, uint16_t usColor) {
+	/*
+	Helper function to draw button
+	*/
 	LCD_DrawLine(startC, startP, startC+width, startP, usColor);
 	LCD_DrawLine(startC, startP, startC, startP+height, usColor);
 	LCD_DrawLine(startC+width, startP, startC+width, startP+height, usColor);
@@ -615,6 +612,9 @@ void LCD_DrawRectButton(int startC, int startP, int width, int height, char* lab
 
 
 int LCD_UpdatePb(progressBar* pb, int curProgress, uint16_t usColor) {
+	/*
+	Helper function to update progress bar
+	*/
 	char buffer[50];
 	int step = (int)(curProgress*(pb->width-4)/pb->range);
 	int start;

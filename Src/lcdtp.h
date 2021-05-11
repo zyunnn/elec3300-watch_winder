@@ -65,6 +65,7 @@ typedef struct
 	
 } progressBar;
 
+
 void         		LCD_INIT		( void );
 void           	LCD_Rst			( void );
 void            LCD_BackLed_Control	( FunctionalState enumState );
